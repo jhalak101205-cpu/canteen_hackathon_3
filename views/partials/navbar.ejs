@@ -11,17 +11,19 @@
         <div class="nav-links">
             <a href="/student/menu" class="nav-link">Menu</a>
             <a href="/student/cart" class="nav-link">Cart</a>
-            <a href="/auth/studentLogin" class="nav-link">Student Login</a>
+
             <% if (typeof session !== 'undefined' && session.isStudent) { %>
                 <span class="nav-link" style="color: var(--accent); font-weight: 700;">👋 <%= session.studentName || 'Student' %></span>
                 <form action="/api/auth/logout" method="POST" style="display: inline; margin: 0; padding: 0;">
-                    <button type="submit" class="nav-link" style="background: none; border: none; cursor: pointer; padding: 0; font: inherit; color: inherit;">Logout</button>
+                    <button type="submit" class="nav-link" style="background: none; border: none; cursor: pointer; padding: 0; font: inherit; color: inherit; display: inline-block;">Logout</button>
                 </form>
+            <% } else if (typeof session !== 'undefined' && session.isAdmin) { %>
+                <a href="/admin/dashboard" class="nav-link">Admin Dashboard</a>
+                <a href="/admin/logout" class="nav-link">Logout</a>
             <% } else { %>
                 <a href="/auth/studentLogin" class="nav-link">Student Login</a>
+                <a href="/auth/adminLogin" class="nav-btn">Admin Login</a>
             <% } %>
-            <a href="/admin/dashboard" class="nav-link">Admin Dashboard</a>
-            <a href="/auth/adminLogin" class="nav-btn">Admin Login</a>
         </div>
     </div>
 </nav>

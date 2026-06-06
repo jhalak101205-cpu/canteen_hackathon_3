@@ -73,9 +73,13 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
 
                         <div style="display:flex; align-items:center; gap:16px;">
-                            <div style="font-size:42px;">
-                                ${item.image}
-                            </div>
+                            ${item.image && item.image.startsWith("http") ? `
+                                <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                            ` : `
+                                <div style="font-size:42px; width:64px; height:64px; display:flex; align-items:center; justify-content:center;">
+                                    ${item.image || "🍽️"}
+                                </div>
+                            `}
 
                             <div>
                                 <h3 class="food-title">${item.name}</h3>

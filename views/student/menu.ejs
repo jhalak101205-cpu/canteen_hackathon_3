@@ -66,8 +66,10 @@
                                                         <input type="hidden" name="price" value="<%= item.price %>">
                                                         <input type="hidden" name="image"
                                                             value="<%= item.image || '🍽️' %>">
+                                                        <input type="hidden" name="category"
+                                                            value="<%= item.category %>">
 
-                                                        <button type="submit" class="add-btn">Add</button>
+                                                        <button type="submit" class="add-btn">ADD</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -79,7 +81,7 @@
             </div>
         </main>
 
-        <!-- Zepto style Floating Cart Bar -->
+        <!-- Floating Cart Bar -->
         <div class="checkout-bar-floating" id="floatingCart">
             <div class="checkout-bar-info">
                 <span class="checkout-items" id="cartCountText">0 Items added</span>
@@ -93,85 +95,89 @@
 
         <script>
             function getCart() {
-                return JSON.parse(localStorage.getItem('canteen_cart') || '[]');
+                return JSON.parse(localStorage.getItem("canteen_cart") || "[]");
             }
 
             function saveCart(cart) {
-                localStorage.setItem('canteen_cart', JSON.stringify(cart));
+                localStorage.setItem("canteen_cart", JSON.stringify(cart));
                 updateFloatingBar();
             }
 
             function updateFloatingBar() {
                 const cart = getCart();
-                const bar = document.getElementById('floatingCart');
-                const countText = document.getElementById('cartCountText');
-                const totalText = document.getElementById('cartTotalPrice');
+
+                const bar = document.getElementById("floatingCart");
+                const countText = document.getElementById("cartCountText");
+                const totalText = document.getElementById("cartTotalPrice");
+
+                if (!bar || !countText || !totalText) return;
 
                 if (cart.length > 0) {
                     const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
-                    const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+                    const totalPrice = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
 
-                    countText.innerText = `${totalItems} Item${totalItems > 1 ? 's' : ''} added`;
+                    countText.innerText = `${totalItems} Item${totalItems > 1 ? "s" : ""} added`;
                     totalText.innerText = `₹${totalPrice}`;
-                    bar.classList.add('show');
+                    bar.classList.add("show");
                 } else {
-                    bar.classList.remove('show');
+                    bar.classList.remove("show");
                 }
             }
 
-            // Add to cart
-            document.querySelectorAll('.add-to-cart-form').forEach(form => {
-                form.addEventListener('submit', function (e) {
+            document.querySelectorAll(".add-to-cart-form").forEach(form => {
+                form.addEventListener("submit", function (e) {
                     e.preventDefault();
 
                     const itemId = this.querySelector('input[name="itemId"]').value;
                     const name = this.querySelector('input[name="itemName"]').value;
-                    const price = parseInt(this.querySelector('input[name="price"]').value);
+                    const price = Number(this.querySelector('input[name="price"]').value);
                     const image = this.querySelector('input[name="image"]').value;
+                    const category = this.querySelector('input[name="category"]').value;
 
                     let cart = getCart();
 
-                    const existingIndex = cart.findIndex(item => item.itemId === itemId);
+                    const existingItem = cart.find(item => item.itemId === itemId);
 
-                    if (existingIndex > -1) {
-                        cart[existingIndex].qty += 1;
+                    if (existingItem) {
+                        existingItem.qty += 1;
                     } else {
                         cart.push({
                             itemId,
                             name,
                             price,
                             image,
+                            category,
                             qty: 1
                         });
                     }
 
                     saveCart(cart);
 
-                    const btn = this.querySelector('.add-btn');
+                    const btn = this.querySelector(".add-btn");
                     const originalText = btn.innerText;
 
-                    btn.innerText = 'Added! ✓';
-                    btn.style.backgroundColor = 'var(--accent)';
-                    btn.style.color = 'white';
+                    btn.innerText = "ADDED ✓";
+                    btn.style.backgroundColor = "var(--accent)";
+                    btn.style.color = "white";
 
                     setTimeout(() => {
                         btn.innerText = originalText;
-                        btn.style.backgroundColor = '';
-                        btn.style.color = '';
+                        btn.style.backgroundColor = "";
+                        btn.style.color = "";
                     }, 1000);
                 });
             });
 
             // Category filter
-            const categoryButtons = document.querySelectorAll('.category-pill');
-            const foodCards = document.querySelectorAll('.food-card');
+            const categoryButtons = document.querySelectorAll(".category-pill");
+            const foodCards = document.querySelectorAll(".food-card");
 
             categoryButtons.forEach(button => {
-                button.addEventListener('click', () => {
+                button.addEventListener("click", () => {
                     const selectedCategory = button.dataset.category;
 
-                    categoryButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
+                    categoryButtons.forEach(btn => btn.classList.remove("active"));
+                    button.classList.add("active");
 
                     foodCards.forEach(card => {
                         const cardCategory = card.dataset.category;
@@ -185,7 +191,7 @@
                 });
             });
 
-            document.addEventListener('DOMContentLoaded', updateFloatingBar);
+            document.addEventListener("DOMContentLoaded", updateFloatingBar);
         </script>
 
         <%- include("../partials/footer") %>

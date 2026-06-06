@@ -1,0 +1,62 @@
+<%- include("partials/header") %>
+<%- include("partials/navbar") %>
+
+<main class="hero">
+    <div class="container hero-layout">
+        <div class="hero-content">
+            <span class="hero-tag">⚡ Superfast Table Delivery</span>
+            <h1 class="hero-title">Craving Food?<br>Get it in <span>10 Minutes!</span></h1>
+            <p class="hero-desc">
+                Welcome to <b>Canteen Express</b>. Order your favorite meals, beverages, and snacks directly from your table. Skip the long queues, get digital tokens, and watch your order get prepared in real-time.
+            </p>
+            <div class="hero-actions">
+                <!-- Backend route will be added here -->
+                <a href="" class="hero-btn student">
+                    🎓 Student Login
+                </a>
+                <!-- Backend route will be added here -->
+                <a href="" class="hero-btn admin">
+                    💼 Admin Portal
+                </a>
+            </div>
+        </div>
+        
+        <div class="hero-image-container">
+            <div class="hero-blob"></div>
+            <!-- Interactive Zepto-styled CSS illustration of a fast order tracking receipt -->
+            <div style="background: white; border: 1.5px solid var(--border-color); border-radius: var(--radius-lg); padding: 30px; box-shadow: var(--shadow-lg); width: 100%; max-width: 380px; position: relative; z-index: 5; animation: float 6s ease-in-out infinite;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px dashed var(--border-color); padding-bottom: 15px;">
+                    <div>
+                        <h4 style="font-weight: 800; color: var(--primary);">⚡ CanteenExpress</h4>
+                        <span style="font-size: 11px; color: var(--text-muted);">Order #T-9842</span>
+                    </div>
+                    <div style="background-color: var(--accent-glow); color: var(--accent); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-sm);">
+                        Preparing
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span style="color: var(--accent); font-weight: 800;">1x</span> Double Cheese Burger</span>
+                        <span style="font-size: 14px; font-weight: 700; color: var(--primary-dark);">₹120</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span style="color: var(--accent); font-weight: 800;">2x</span> Special Masala Chai</span>
+                        <span style="font-size: 14px; font-weight: 700; color: var(--primary-dark);">₹40</span>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1.5px solid var(--border-color); padding-top: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 700; color: var(--text-main);">Total Paid</span>
+                    <span style="font-size: 20px; font-weight: 800; color: var(--accent);">₹160</span>
+                </div>
+                
+                <div style="background-color: var(--primary-glow); padding: 12px; border-radius: var(--radius-sm); font-size: 13px; text-align: center; color: var(--primary); font-weight: 600;">
+                    📍 Table 4 • ⏱️ Est: 7 Mins remaining
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include("partials/footer") %>

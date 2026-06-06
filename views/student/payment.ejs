@@ -1,0 +1,140 @@
+<%- include("../partials/header") %>
+<%- include("../partials/navbar") %>
+
+<main class="student-layout">
+    <div class="container">
+        <h2 style="margin-bottom: 24px;">Checkout Payment</h2>
+        
+        <div class="payment-grid">
+            <!-- Left Side: Select Payment Method -->
+            <div>
+                <h3 style="font-size: 18px; margin-bottom: 16px;">Choose Payment Method</h3>
+                
+                <!-- Backend route will be added here -->
+                <form action="" method="POST" id="paymentForm">
+                    <input type="hidden" name="selectedMethod" id="selectedMethodInput" value="UPI">
+                    <input type="hidden" name="finalAmount" id="finalAmountInput" value="180">
+                    
+                    <div class="payment-options">
+                        <!-- UPI -->
+                        <div class="payment-option-card selected" onclick="selectPaymentMethod('UPI', this)">
+                            <div class="payment-option-icon">📱</div>
+                            <div class="payment-option-details">
+                                <span class="payment-option-title">UPI (GPay / PhonePe / Paytm)</span>
+                                <span class="payment-option-desc">Scan QR code or enter UPI ID for instant checkout</span>
+                            </div>
+                            <input type="radio" class="payment-option-radio" name="pay_radio" checked style="margin-left: auto;">
+                        </div>
+
+                        <!-- Card -->
+                        <div class="payment-option-card" onclick="selectPaymentMethod('Card', this)">
+                            <div class="payment-option-icon">💳</div>
+                            <div class="payment-option-details">
+                                <span class="payment-option-title">Credit or Debit Card</span>
+                                <span class="payment-option-desc">Visa, Mastercard, RuPay, Diners Club supported</span>
+                            </div>
+                            <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
+                        </div>
+
+                        <!-- Cash at Counter -->
+                        <div class="payment-option-card" onclick="selectPaymentMethod('Cash', this)">
+                            <div class="payment-option-icon">💵</div>
+                            <div class="payment-option-details">
+                                <span class="payment-option-title">Pay Cash at Counter</span>
+                                <span class="payment-option-desc">Order now and pay cash at canteen delivery counter</span>
+                            </div>
+                            <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="checkout-btn" style="margin-top: 30px;">
+                        Pay Now <span id="payButtonAmount">₹180</span> 🚀
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Right Side: Order Summary -->
+            <div class="bill-summary-card" style="height: fit-content;">
+                <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">Order Summary</h3>
+                
+                <div id="paymentSummaryContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                    <!-- Items will be loaded from localstorage -->
+                </div>
+                
+                <div class="bill-row">
+                    <span>Subtotal</span>
+                    <span id="sumSubtotal">₹160</span>
+                </div>
+                <div class="bill-row">
+                    <span>Packing & Taxes</span>
+                    <span id="sumFees">₹20</span>
+                </div>
+                <div class="bill-row total">
+                    <span>Amount Payable</span>
+                    <span id="sumTotal">₹180</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Vanilla JS Payment Logic -->
+<script>
+    function selectPaymentMethod(method, element) {
+        // Deselect all
+        document.querySelectorAll('.payment-option-card').forEach(card => {
+            card.classList.remove('selected');
+            card.querySelector('.payment-option-radio').checked = false;
+        });
+        
+        // Select clicked
+        element.classList.add('selected');
+        element.querySelector('.payment-option-radio').checked = true;
+        
+        // Update input
+        document.getElementById('selectedMethodInput').value = method;
+    }
+
+    function loadOrderDetails() {
+        const cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
+        const total = localStorage.getItem('canteen_last_total') || '180';
+        
+        document.getElementById('sumTotal').innerText = `₹${total}`;
+        document.getElementById('payButtonAmount').innerText = `₹${total}`;
+        document.getElementById('finalAmountInput').value = total;
+        
+        const subtotalValue = Math.max(0, parseInt(total) - 20); // Estimation logic
+        document.getElementById('sumSubtotal').innerText = `₹${subtotalValue}`;
+        document.getElementById('sumFees').innerText = `₹${parseInt(total) - subtotalValue}`;
+        
+        const container = document.getElementById('paymentSummaryContainer');
+        if (cart.length > 0) {
+            container.innerHTML = cart.map(item => `
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">${item.qty}x</strong> ${item.name}</span>
+                    <span style="font-weight: 600; color: var(--primary-dark);">₹${item.price * item.qty}</span>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">1x</strong> Cheesy Double Burger</span>
+                    <span style="font-weight: 600; color: var(--primary-dark);">₹120</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">2x</strong> Cold Coffee Premium</span>
+                    <span style="font-weight: 600; color: var(--primary-dark);">₹100</span>
+                </div>
+            `;
+        }
+    }
+
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        // Clear cart on payment submission simulation
+        localStorage.removeItem('canteen_cart');
+    });
+
+    document.addEventListener('DOMContentLoaded', loadOrderDetails);
+</script>
+
+<%- include("../partials/footer") %>

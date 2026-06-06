@@ -1,0 +1,231 @@
+<%- include("../partials/header") %>
+<%- include("../partials/navbar") %>
+
+<main class="student-layout">
+    <div class="container">
+        <!-- Categories Selector (Zepto Quick Commerce feel) -->
+        <div class="categories-container">
+            <button class="category-pill active">⚡ All Items</button>
+            <button class="category-pill">🍔 Fast Food</button>
+            <button class="category-pill">☕ Beverages</button>
+            <button class="category-pill">🥪 Snacks</button>
+            <button class="category-pill">🍕 Meals</button>
+        </div>
+
+        <h2 style="margin-bottom: 24px;">Recommended For You</h2>
+
+        <div class="grid-menu">
+            <!-- 1. Burger Card -->
+            <div class="food-card" data-category="fast-food">
+                <span class="food-badge">Bestseller</span>
+                <div class="food-image-wrapper flex-center" style="background: linear-gradient(135deg, #ffe0b2 0%, #ffb74d 100%);">
+                    <span style="font-size: 64px; animation: float 6s ease-in-out infinite;">🍔</span>
+                </div>
+                <div class="food-card-content">
+                    <h3 class="food-title">Cheesy Double Burger</h3>
+                    <p class="food-desc">Juicy double patty burger with melted cheddar cheese, crisp lettuce, and special canteen mayo.</p>
+                    <div class="food-card-footer">
+                        <div class="food-price"><span>₹</span>120</div>
+                        <!-- Backend route will be added here -->
+                        <form action="" method="POST" class="add-to-cart-form">
+                            <input type="hidden" name="itemName" value="Cheesy Double Burger">
+                            <input type="hidden" name="price" value="120">
+                            <input type="hidden" name="image" value="🍔">
+                            <button type="submit" class="add-btn">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Sandwich Card -->
+            <div class="food-card" data-category="snacks">
+                <div class="food-image-wrapper flex-center" style="background: linear-gradient(135deg, #c8e6c9 0%, #81c784 100%);">
+                    <span style="font-size: 64px; animation: float 6s ease-in-out infinite alternate;">🥪</span>
+                </div>
+                <div class="food-card-content">
+                    <h3 class="food-title">Club Grill Sandwich</h3>
+                    <p class="food-desc">Toasted multi-grain bread layered with sliced veggies, cheese slice, and refreshing mint chutney.</p>
+                    <div class="food-card-footer">
+                        <div class="food-price"><span>₹</span>80</div>
+                        <!-- Backend route will be added here -->
+                        <form action="" method="POST" class="add-to-cart-form">
+                            <input type="hidden" name="itemName" value="Club Grill Sandwich">
+                            <input type="hidden" name="price" value="80">
+                            <input type="hidden" name="image" value="🥪">
+                            <button type="submit" class="add-btn">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Pizza Card -->
+            <div class="food-card" data-category="fast-food">
+                <span class="food-badge">Premium</span>
+                <div class="food-image-wrapper flex-center" style="background: linear-gradient(135deg, #ffcdd2 0%, #e57373 100%);">
+                    <span style="font-size: 64px; animation: float 5s ease-in-out infinite;">🍕</span>
+                </div>
+                <div class="food-card-content">
+                    <h3 class="food-title">Personal Farmhouse Pizza</h3>
+                    <p class="food-desc">Classic hand-tossed 8" crust topped with loaded mozzarella cheese, green peppers, onion, and sweet corn.</p>
+                    <div class="food-card-footer">
+                        <div class="food-price"><span>₹</span>180</div>
+                        <!-- Backend route will be added here -->
+                        <form action="" method="POST" class="add-to-cart-form">
+                            <input type="hidden" name="itemName" value="Personal Farmhouse Pizza">
+                            <input type="hidden" name="price" value="180">
+                            <input type="hidden" name="image" value="🍕">
+                            <button type="submit" class="add-btn">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Coffee Card -->
+            <div class="food-card" data-category="beverages">
+                <div class="food-image-wrapper flex-center" style="background: linear-gradient(135deg, #d7ccc8 0%, #a1887f 100%);">
+                    <span style="font-size: 64px; animation: float 5.5s ease-in-out infinite alternate;">☕</span>
+                </div>
+                <div class="food-card-content">
+                    <h3 class="food-title">Cold Coffee Premium</h3>
+                    <p class="food-desc">Perfectly brewed arabica beans blended with chilled creamy milk, chocolate syrup, and ice cream scoop.</p>
+                    <div class="food-card-footer">
+                        <div class="food-price"><span>₹</span>50</div>
+                        <!-- Backend route will be added here -->
+                        <form action="" method="POST" class="add-to-cart-form">
+                            <input type="hidden" name="itemName" value="Cold Coffee Premium">
+                            <input type="hidden" name="price" value="50">
+                            <input type="hidden" name="image" value="☕">
+                            <button type="submit" class="add-btn">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Samosa Card -->
+            <div class="food-card" data-category="snacks">
+                <span class="food-badge">Quick Bite</span>
+                <div class="food-image-wrapper flex-center" style="background: linear-gradient(135deg, #ffe0b2 0%, #ffb74d 100%);">
+                    <span style="font-size: 64px; animation: float 6.5s ease-in-out infinite;">🥟</span>
+                </div>
+                <div class="food-card-content">
+                    <h3 class="food-title">Crispy Aloo Samosa (2 pcs)</h3>
+                    <p class="food-desc">Classic fried triangular pastry stuffed with spiced potato mash, green peas, served with sweet tamarind dip.</p>
+                    <div class="food-card-footer">
+                        <div class="food-price"><span>₹</span>20</div>
+                        <!-- Backend route will be added here -->
+                        <form action="" method="POST" class="add-to-cart-form">
+                            <input type="hidden" name="itemName" value="Crispy Aloo Samosa (2 pcs)">
+                            <input type="hidden" name="price" value="20">
+                            <input type="hidden" name="image" value="🥟">
+                            <button type="submit" class="add-btn">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Noodles Card -->
+            <div class="food-card" data-category="meals">
+                <div class="food-image-wrapper flex-center" style="background: linear-gradient(135deg, #e1bee7 0%, #ba68c8 100%);">
+                    <span style="font-size: 64px; animation: float 5.8s ease-in-out infinite alternate;">🍜</span>
+                </div>
+                <div class="food-card-content">
+                    <h3 class="food-title">Spicy Schezwan Noodles</h3>
+                    <p class="food-desc">Stir fried hakka noodles tossed in fiery Schezwan paste, crisp scallions, cabbage, and sweet pepper juliennes.</p>
+                    <div class="food-card-footer">
+                        <div class="food-price"><span>₹</span>90</div>
+                        <!-- Backend route will be added here -->
+                        <form action="" method="POST" class="add-to-cart-form">
+                            <input type="hidden" name="itemName" value="Spicy Schezwan Noodles">
+                            <input type="hidden" name="price" value="90">
+                            <input type="hidden" name="image" value="🍜">
+                            <button type="submit" class="add-btn">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Zepto style Floating Cart Bar -->
+<div class="checkout-bar-floating" id="floatingCart">
+    <div class="checkout-bar-info">
+        <span class="checkout-items" id="cartCountText">0 Items added</span>
+        <span class="checkout-total-price" id="cartTotalPrice">₹0</span>
+    </div>
+    <!-- Backend route will be added here -->
+    <a href="" class="checkout-link">
+        View Cart ➡️
+    </a>
+</div>
+
+<!-- Vanilla JS Cart Interaction -->
+<script>
+    // Initialize or load cart from localStorage
+    function getCart() {
+        return JSON.parse(localStorage.getItem('canteen_cart') || '[]');
+    }
+
+    function saveCart(cart) {
+        localStorage.setItem('canteen_cart', JSON.stringify(cart));
+        updateFloatingBar();
+    }
+
+    function updateFloatingBar() {
+        const cart = getCart();
+        const bar = document.getElementById('floatingCart');
+        const countText = document.getElementById('cartCountText');
+        const totalText = document.getElementById('cartTotalPrice');
+        
+        if (cart.length > 0) {
+            const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+            const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            
+            countText.innerText = `${totalItems} Item${totalItems > 1 ? 's' : ''} added`;
+            totalText.innerText = `₹${totalPrice}`;
+            bar.classList.add('show');
+        } else {
+            bar.classList.remove('show');
+        }
+    }
+
+    // Intercept form submissions for live simulation
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop page reload for mock demo
+            
+            const name = this.querySelector('input[name="itemName"]').value;
+            const price = parseInt(this.querySelector('input[name="price"]').value);
+            const image = this.querySelector('input[name="image"]').value;
+            
+            let cart = getCart();
+            const existingIndex = cart.findIndex(item => item.name === name);
+            
+            if (existingIndex > -1) {
+                cart[existingIndex].qty += 1;
+            } else {
+                cart.push({ name, price, image, qty: 1 });
+            }
+            
+            saveCart(cart);
+            
+            // Nice micro-animation on button
+            const btn = this.querySelector('.add-btn');
+            const originalText = btn.innerText;
+            btn.innerText = 'Added! ✓';
+            btn.style.backgroundColor = 'var(--accent)';
+            btn.style.color = 'white';
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            }, 1000);
+        });
+    });
+
+    // Run on startup
+    document.addEventListener('DOMContentLoaded', updateFloatingBar);
+</script>
+
+<%- include("../partials/footer") %>

@@ -1,0 +1,49 @@
+<%- include("../partials/header") %>
+<%- include("../partials/navbar") %>
+
+<main class="auth-page">
+    <div class="auth-card admin-card">
+        <div class="auth-header">
+            <h2 class="auth-title" style="color: var(--primary);">Admin Login</h2>
+            <p class="auth-subtitle">Manage menu items, track incoming orders, and toggle status</p>
+        </div>
+        
+        <!-- Backend route will be added here -->
+        <form action="" method="POST">
+            <div class="form-group">
+                <label for="email" class="form-label">Admin Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    placeholder="Enter admin credentials" 
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="Enter secure password" 
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="auth-btn admin">
+                Log In as Admin
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Looking for the student portal? <!-- Backend route will be added here --> <a href="" style="color: var(--accent);">Student Login</a></p>
+            <p style="margin-top: 10px;"><a href="">Back to Home</a></p>
+        </div>
+    </div>
+</main>
+
+<%- include("../partials/footer") %>

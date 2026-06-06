@@ -10,160 +10,64 @@
             </div>
             
             <div class="admin-orders-tabs">
-                <button class="admin-orders-tab active" onclick="filterOrders('all', this)">All (3)</button>
-                <button class="admin-orders-tab" onclick="filterOrders('pending', this)">Pending (2)</button>
-                <button class="admin-orders-tab" onclick="filterOrders('completed', this)">Completed (1)</button>
+                <button class="admin-orders-tab active" onclick="filterOrders('all', this)">All (<%= orders.length %>)</button>
+                <button class="admin-orders-tab" onclick="filterOrders('pending', this)">Pending (<%= orders.filter(o => o.status !== 'Delivered').length %>)</button>
+                <button class="admin-orders-tab" onclick="filterOrders('completed', this)">Completed (<%= orders.filter(o => o.status === 'Delivered').length %>)</button>
             </div>
         </div>
 
         <div class="admin-order-cards-grid">
-            <!-- Order Card 1 (Pending - Preparing) -->
-            <div class="admin-order-card" data-status="pending">
-                <div class="admin-order-header">
-                    <span class="admin-order-token">Token #T-7422</span>
-                    <span class="status-pill preparing" id="status-7422">Preparing</span>
-                </div>
-                <div class="admin-order-body">
-                    <ul class="admin-order-items">
-                        <li class="admin-order-item">
-                            <span><strong class="item-qty">2x</strong> Cheesy Double Burger</span>
-                            <span>₹240</span>
-                        </li>
-                        <li class="admin-order-item">
-                            <span><strong class="item-qty">1x</strong> Spicy Schezwan Noodles</span>
-                            <span>₹90</span>
-                        </li>
-                    </ul>
-                    <div class="admin-order-total-row">
-                        <span>Grand Total</span>
-                        <span>₹340</span>
-                    </div>
-                </div>
-                <div class="admin-order-actions">
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7422">
-                        <input type="hidden" name="status" value="Preparing">
-                        <button type="button" class="action-btn prepare active" onclick="updateStatus('7422', 'preparing', this)">Preparing</button>
-                    </form>
-                    
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7422">
-                        <input type="hidden" name="status" value="Ready">
-                        <button type="button" class="action-btn ready" onclick="updateStatus('7422', 'ready', this)">Ready</button>
-                    </form>
-                    
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7422">
-                        <input type="hidden" name="status" value="Delivered">
-                        <button type="button" class="action-btn deliver" onclick="updateStatus('7422', 'delivered', this)">Delivered</button>
-                    </form>
-                </div>
-            </div>
+            <% if (orders.length === 0) { %>
+                <p style="color: var(--text-muted); font-size: 16px;">No orders yet.</p>
+            <% } %>
 
-            <!-- Order Card 2 (Pending - Ready) -->
-            <div class="admin-order-card" data-status="pending">
+            <% orders.forEach(order => { %>
+            <div class="admin-order-card" data-status="<%= order.status === 'Delivered' ? 'completed' : 'pending' %>">
                 <div class="admin-order-header">
-                    <span class="admin-order-token">Token #T-7423</span>
-                    <span class="status-pill ready" id="status-7423">Ready</span>
+                    <span class="admin-order-token">Token #<%= order.token %></span>
+                    <span class="status-pill <%= order.status.toLowerCase() %>" id="status-<%= order._id %>">
+                        <%= order.status %>
+                    </span>
                 </div>
-                <div class="admin-order-body">
-                    <ul class="admin-order-items">
-                        <li class="admin-order-item">
-                            <span><strong class="item-qty">1x</strong> Personal Farmhouse Pizza</span>
-                            <span>₹180</span>
-                        </li>
-                        <li class="admin-order-item">
-                            <span><strong class="item-qty">2x</strong> Cold Coffee Premium</span>
-                            <span>₹100</span>
-                        </li>
-                    </ul>
-                    <div class="admin-order-total-row">
-                        <span>Grand Total</span>
-                        <span>₹290</span>
-                    </div>
-                </div>
-                <div class="admin-order-actions">
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7423">
-                        <input type="hidden" name="status" value="Preparing">
-                        <button type="button" class="action-btn prepare" onclick="updateStatus('7423', 'preparing', this)">Preparing</button>
-                    </form>
-                    
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7423">
-                        <input type="hidden" name="status" value="Ready">
-                        <button type="button" class="action-btn ready active" onclick="updateStatus('7423', 'ready', this)">Ready</button>
-                    </form>
-                    
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7423">
-                        <input type="hidden" name="status" value="Delivered">
-                        <button type="button" class="action-btn deliver" onclick="updateStatus('7423', 'delivered', this)">Delivered</button>
-                    </form>
-                </div>
-            </div>
 
-            <!-- Order Card 3 (Completed - Delivered) -->
-            <div class="admin-order-card" data-status="completed">
-                <div class="admin-order-header">
-                    <span class="admin-order-token">Token #T-7421</span>
-                    <span class="status-pill delivered" id="status-7421">Delivered</span>
-                </div>
                 <div class="admin-order-body">
                     <ul class="admin-order-items">
+                        <% order.items.forEach(item => { %>
                         <li class="admin-order-item">
-                            <span><strong class="item-qty">3x</strong> Crispy Aloo Samosa (2 pcs)</span>
-                            <span>₹60</span>
+                            <span><strong class="item-qty"><%= item.quantity %>x</strong> <%= item.name %></span>
+                            <span>₹<%= item.price * item.quantity %></span>
                         </li>
+                        <% }) %>
                     </ul>
                     <div class="admin-order-total-row">
                         <span>Grand Total</span>
-                        <span>₹70</span>
+                        <span>₹<%= order.totalAmount %></span>
                     </div>
                 </div>
+
                 <div class="admin-order-actions">
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7421">
-                        <input type="hidden" name="status" value="Preparing">
-                        <button type="button" class="action-btn prepare" onclick="updateStatus('7421', 'preparing', this)">Preparing</button>
-                    </form>
-                    
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7421">
-                        <input type="hidden" name="status" value="Ready">
-                        <button type="button" class="action-btn ready" onclick="updateStatus('7421', 'ready', this)">Ready</button>
-                    </form>
-                    
-                    <!-- Backend route will be added here -->
-                    <form action="" method="POST" style="display: contents;">
-                        <input type="hidden" name="token" value="T-7421">
-                        <input type="hidden" name="status" value="Delivered">
-                        <button type="button" class="action-btn deliver active" onclick="updateStatus('7421', 'delivered', this)">Delivered</button>
-                    </form>
+                    <button class="action-btn prepare <%= order.status === 'Preparing' ? 'active' : '' %>"
+                        onclick="updateStatus('<%= order._id %>', 'Preparing', this)">Preparing</button>
+
+                    <button class="action-btn ready <%= order.status === 'Ready' ? 'active' : '' %>"
+                        onclick="updateStatus('<%= order._id %>', 'Ready', this)">Ready</button>
+
+                    <button class="action-btn deliver <%= order.status === 'Delivered' ? 'active' : '' %>"
+                        onclick="updateStatus('<%= order._id %>', 'Delivered', this)">Delivered</button>
                 </div>
             </div>
+            <% }) %>
         </div>
     </div>
 </main>
 
-<!-- Vanilla JS Tab & Status Handler -->
 <script>
     function filterOrders(category, tabBtn) {
-        // Toggle tab highlights
         document.querySelectorAll('.admin-orders-tab').forEach(tab => {
             tab.classList.remove('active');
         });
         tabBtn.classList.add('active');
-        
-        // Show/hide cards
+
         document.querySelectorAll('.admin-order-card').forEach(card => {
             const status = card.getAttribute('data-status');
             if (category === 'all') {
@@ -178,30 +82,34 @@
         });
     }
 
-    function updateStatus(tokenId, statusType, btnElement) {
-        // Find the parent actions container and deselect other active buttons
-        const actionContainer = btnElement.closest('.admin-order-actions');
-        actionContainer.querySelectorAll('.action-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        // Mark clicked button active
-        btnElement.classList.add('active');
-        
-        // Update badge
-        const badge = document.getElementById(`status-${tokenId}`);
-        badge.className = `status-pill ${statusType}`;
-        
-        // Capitalize status string for text content
-        const statusText = statusType.charAt(0).toUpperCase() + statusType.slice(1);
-        badge.innerText = statusText;
-        
-        // Update parent card category for filter filtering
-        const card = btnElement.closest('.admin-order-card');
-        if (statusType === 'delivered') {
-            card.setAttribute('data-status', 'completed');
-        } else {
-            card.setAttribute('data-status', 'pending');
+    async function updateStatus(orderId, status, btnElement) {
+        try {
+            const res = await fetch(`/admin/orders/${orderId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+
+            if (res.ok) {
+                // Update active button
+                const actionContainer = btnElement.closest('.admin-order-actions');
+                actionContainer.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+                btnElement.classList.add('active');
+
+                // Update status badge
+                const badge = document.getElementById(`status-${orderId}`);
+                badge.className = `status-pill ${status.toLowerCase()}`;
+                badge.innerText = status;
+
+                // Update card's data-status for filter
+                const card = btnElement.closest('.admin-order-card');
+                card.setAttribute('data-status', status === 'Delivered' ? 'completed' : 'pending');
+            } else {
+                alert('Failed to update status. Try again.');
+            }
+        } catch (err) {
+            console.error('Status update error:', err);
+            alert('Network error. Try again.');
         }
     }
 </script>

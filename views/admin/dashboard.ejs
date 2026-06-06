@@ -19,7 +19,7 @@
             <div class="metric-card orders">
                 <div class="metric-info">
                     <h3>Total Orders</h3>
-                    <div class="metric-val">342</div>
+                    <div class="metric-val"><%= totalOrders %></div>
                 </div>
                 <div class="metric-icon-box">📦</div>
             </div>
@@ -28,7 +28,7 @@
             <div class="metric-card pending">
                 <div class="metric-info">
                     <h3>Pending Orders</h3>
-                    <div class="metric-val">12</div>
+                    <div class="metric-val"><%= pendingOrders %></div>
                 </div>
                 <div class="metric-icon-box">⏳</div>
             </div>
@@ -37,7 +37,7 @@
             <div class="metric-card revenue">
                 <div class="metric-info">
                     <h3>Today's Revenue</h3>
-                    <div class="metric-val">₹18,430</div>
+                    <div class="metric-val">₹<%= revenue.toLocaleString('en-IN') %></div>
                 </div>
                 <div class="metric-icon-box">💰</div>
             </div>
@@ -45,31 +45,3 @@
         
         <!-- Action Pathways Grid -->
         <h3 style="margin-bottom: 20px; font-size: 20px;">Administrative Actions</h3>
-        
-        <div class="admin-actions-grid">
-            <!-- Manage Orders -->
-            <div class="admin-action-card">
-                <div class="admin-action-icon">🧾</div>
-                <h4 class="admin-action-title">Manage Incoming Orders</h4>
-                <p class="admin-action-desc">View active tokens, prepare dishes, update fulfillment tracking, and trigger status updates.</p>
-                <!-- Backend route will be added here -->
-                <a href="" class="admin-action-btn">
-                    View Live Orders ➔
-                </a>
-            </div>
-
-            <!-- Manage Menu -->
-            <div class="admin-action-card">
-                <div class="admin-action-icon">📋</div>
-                <h4 class="admin-action-title">Manage Canteen Menu</h4>
-                <p class="admin-action-desc">Add new foods, update pricing models, upload descriptions, and toggle item availability details.</p>
-                <!-- Backend route will be added here -->
-                <a href="" class="admin-action-btn secondary">
-                    Manage Menu ➔
-                </a>
-            </div>
-        </div>
-    </div>
-</main>
-
-<%- include("../partials/footer") %>

@@ -1,10 +1,9 @@
 require("dotenv").config();
-const express = require('express')
-const mongoose = require('mongoose');
-const path = require('path')
-const http = require('http');
-const { Server } = require('socket.io');
-
+const express = require("express");
+const mongoose = require("mongoose");
+const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
 
 // Passport & sessions
 const session = require("express-session");
@@ -14,8 +13,12 @@ const { MongoStore } = require("connect-mongo");
 const initializePassport = require("./config/passport");
 initializePassport(passport);
 
-//routes 
+// Routes
 const studentAuthRoutes = require("./routes/StudentAuth");
+const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const studentRoutes = require("./routes/studentRoutes");
+const paymentRoutes = require("./routes/payment");
 
 const app = express();
 const server = http.createServer(app);
@@ -25,13 +28,11 @@ const io = new Server(server);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-const seedMenuItems = require("./seed");
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || "canteen-passport-secret",
@@ -53,7 +54,6 @@ app.use(passport.session());
 
 // Expose session variables and user details to all EJS templates
 app.use((req, res, next) => {
-    // Populate legacy session properties for EJS menu popup compatibility
     if (req.isAuthenticated() && req.user) {
         req.session.studentId = req.user._id;
         req.session.isStudent = true;
@@ -64,76 +64,34 @@ app.use((req, res, next) => {
     next();
 });
 
+// Make io available in routes
+app.set("io", io);
+
+// Auth API routes (Passport-based login/register)
 app.use("/student-auth", studentAuthRoutes);
 app.use("/api/auth", studentAuthRoutes);
 
-// Make io available in routes 
-
-app.set("io", io);
-
-// Database connection (gracefully handled if not running locally)
-mongoose.connect("mongodb://127.0.0.1:27017/canteenApp")
-    .then(() => {
-        console.log(" MongoDB connected successfully");
-    })
-    .catch((err) => {
-        console.log(" MongoDB connection warning (you can still run the frontend):", err.message);
-    });
-
-/* Page Routes */
+// Page routes
+app.use("/auth", authRoutes);
+app.use("/admin", adminRoutes);
+app.use("/student", studentRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Home page
-app.get('/', (req, res) => {
-    res.render('home');
+app.get("/", (req, res) => {
+    res.render("home");
 });
 
-// Authentication routes
-app.get('/auth/studentLogin', (req, res) => {
-    res.render('auth/studentLogin');
-});
+// Database connection
+mongoose.connect("mongodb://127.0.0.1:27017/canteenApp")
+    .then(() => {
+        console.log("MongoDB connected successfully");
+    })
+    .catch((err) => {
+        console.log("MongoDB connection warning (you can still run the frontend):", err.message);
+    });
 
-app.get('/auth/adminLogin', (req, res) => {
-    res.render('auth/adminLogin');
-});
-
-
-const studentRoutes = require("./routes/studentRoutes");
-
-app.use("/student", studentRoutes);
-
-
-seedMenuItems(); // to seed the database, HARDCODED MENU....
-
-
-
-// Student flow routes
-// app.get('/student/menu', (req, res) => {
-//     res.render('student/menu');
-// });
-
-// app.get('/student/cart', (req, res) => {
-//     res.render('student/cart');
-// });
-
-// app.get('/student/payment', (req, res) => {
-//     res.render('student/payment');
-// });
-
-// app.get('/student/success', (req, res) => {
-//     res.render('student/success');
-// });
-
-// Admin flow routes
-app.get('/admin/dashboard', (req, res) => {
-    res.render('admin/dashboard');
-});
-
-app.get('/admin/orders', (req, res) => {
-    // We render the EJS template directly
-    res.render('admin/orders');
-});
-
-/* Socket connection for real-time order updates */
+// Socket connection for real-time order updates
 io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
@@ -142,12 +100,7 @@ io.on("connection", (socket) => {
     });
 });
 
-
-
-
-
-
 const port = 3000;
 server.listen(port, () => {
-    console.log(` Canteen Express server running at http://localhost:${port}`);
+    console.log(`Canteen Express server running at http://localhost:${port}`);
 });

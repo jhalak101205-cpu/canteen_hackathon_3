@@ -4,17 +4,16 @@
 <main class="student-layout">
     <div class="container">
         <h2 style="margin-bottom: 24px;">Checkout Payment</h2>
-        
+
         <div class="payment-grid">
             <!-- Left Side: Select Payment Method -->
             <div>
                 <h3 style="font-size: 18px; margin-bottom: 16px;">Choose Payment Method</h3>
-                
-                <!-- Backend route will be added here -->
-                <form action="" method="POST" id="paymentForm">
+
+                <form id="paymentForm">
                     <input type="hidden" name="selectedMethod" id="selectedMethodInput" value="UPI">
                     <input type="hidden" name="finalAmount" id="finalAmountInput" value="180">
-                    
+
                     <div class="payment-options">
                         <!-- UPI -->
                         <div class="payment-option-card selected" onclick="selectPaymentMethod('UPI', this)">
@@ -26,22 +25,22 @@
                             <input type="radio" class="payment-option-radio" name="pay_radio" checked style="margin-left: auto;">
                         </div>
 
-                        <!-- Card -->
-                        <div class="payment-option-card" onclick="selectPaymentMethod('Card', this)">
-                            <div class="payment-option-icon">💳</div>
+                        <!-- Pay Later -->
+                        <div class="payment-option-card" onclick="selectPaymentMethod('PAY_LATER', this)">
+                            <div class="payment-option-icon">🕒</div>
                             <div class="payment-option-details">
-                                <span class="payment-option-title">Credit or Debit Card</span>
-                                <span class="payment-option-desc">Visa, Mastercard, RuPay, Diners Club supported</span>
+                                <span class="payment-option-title">Pay Later</span>
+                                <span class="payment-option-desc">Order now and pay within 7 days</span>
                             </div>
                             <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
                         </div>
 
-                        <!-- Cash at Counter -->
-                        <div class="payment-option-card" onclick="selectPaymentMethod('Cash', this)">
+                        <!-- Pay at Counter -->
+                        <div class="payment-option-card" onclick="selectPaymentMethod('PAY_AT_COUNTER', this)">
                             <div class="payment-option-icon">💵</div>
                             <div class="payment-option-details">
-                                <span class="payment-option-title">Pay Cash at Counter</span>
-                                <span class="payment-option-desc">Order now and pay cash at canteen delivery counter</span>
+                                <span class="payment-option-title">Pay at Counter</span>
+                                <span class="payment-option-desc">Order now and pay at canteen delivery counter</span>
                             </div>
                             <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
                         </div>
@@ -52,23 +51,27 @@
                     </button>
                 </form>
             </div>
-            
+
             <!-- Right Side: Order Summary -->
             <div class="bill-summary-card" style="height: fit-content;">
-                <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">Order Summary</h3>
-                
+                <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">
+                    Order Summary
+                </h3>
+
                 <div id="paymentSummaryContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                    <!-- Items will be loaded from localstorage -->
+                    <!-- Items will be loaded from localStorage -->
                 </div>
-                
+
                 <div class="bill-row">
                     <span>Subtotal</span>
                     <span id="sumSubtotal">₹160</span>
                 </div>
+
                 <div class="bill-row">
                     <span>Packing & Taxes</span>
                     <span id="sumFees">₹20</span>
                 </div>
+
                 <div class="bill-row total">
                     <span>Amount Payable</span>
                     <span id="sumTotal">₹180</span>
@@ -78,63 +81,284 @@
     </div>
 </main>
 
-<!-- Vanilla JS Payment Logic -->
 <script>
     function selectPaymentMethod(method, element) {
-        // Deselect all
-        document.querySelectorAll('.payment-option-card').forEach(card => {
-            card.classList.remove('selected');
-            card.querySelector('.payment-option-radio').checked = false;
+        document.querySelectorAll(".payment-option-card").forEach(card => {
+            card.classList.remove("selected");
+            card.querySelector(".payment-option-radio").checked = false;
         });
-        
-        // Select clicked
-        element.classList.add('selected');
-        element.querySelector('.payment-option-radio').checked = true;
-        
-        // Update input
-        document.getElementById('selectedMethodInput').value = method;
+
+        element.classList.add("selected");
+        element.querySelector(".payment-option-radio").checked = true;
+
+        document.getElementById("selectedMethodInput").value = method;
+
+        const amount = document.getElementById("finalAmountInput").value;
+        const button = document.querySelector(".checkout-btn");
+
+        if (method === "UPI") {
+            button.innerHTML = `Pay Now <span id="payButtonAmount">₹${amount}</span> 🚀`;
+        } else if (method === "PAY_LATER") {
+            button.innerHTML = `Place Order - Pay Later <span id="payButtonAmount">₹${amount}</span> 🕒`;
+        } else if (method === "PAY_AT_COUNTER") {
+            button.innerHTML = `Place Order <span id="payButtonAmount">₹${amount}</span> 🍽️`;
+        }
     }
 
     function loadOrderDetails() {
-        const cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
-        const total = localStorage.getItem('canteen_last_total') || '180';
-        
-        document.getElementById('sumTotal').innerText = `₹${total}`;
-        document.getElementById('payButtonAmount').innerText = `₹${total}`;
-        document.getElementById('finalAmountInput').value = total;
-        
-        const subtotalValue = Math.max(0, parseInt(total) - 20); // Estimation logic
-        document.getElementById('sumSubtotal').innerText = `₹${subtotalValue}`;
-        document.getElementById('sumFees').innerText = `₹${parseInt(total) - subtotalValue}`;
-        
-        const container = document.getElementById('paymentSummaryContainer');
+        const cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+        const total = Number(localStorage.getItem("canteen_last_total") || 180);
+
+        document.getElementById("sumTotal").innerText = `₹${total}`;
+        document.getElementById("payButtonAmount").innerText = `₹${total}`;
+        document.getElementById("finalAmountInput").value = total;
+
+        const subtotalValue = Math.max(0, total - 20);
+        const fees = total - subtotalValue;
+
+        document.getElementById("sumSubtotal").innerText = `₹${subtotalValue}`;
+        document.getElementById("sumFees").innerText = `₹${fees}`;
+
+        const container = document.getElementById("paymentSummaryContainer");
+
         if (cart.length > 0) {
-            container.innerHTML = cart.map(item => `
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">${item.qty}x</strong> ${item.name}</span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹${item.price * item.qty}</span>
-                </div>
-            `).join('');
+            container.innerHTML = cart.map(item => {
+                const quantity = item.qty || item.quantity || 1;
+                const price = item.price || 0;
+
+                return `
+                    <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                        <span style="color: var(--text-muted);">
+                            <strong style="color: var(--primary);">${quantity}x</strong> ${item.name}
+                        </span>
+                        <span style="font-weight: 600; color: var(--primary-dark);">
+                            ₹${price * quantity}
+                        </span>
+                    </div>
+                `;
+            }).join("");
         } else {
             container.innerHTML = `
                 <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">1x</strong> Cheesy Double Burger</span>
+                    <span style="color: var(--text-muted);">
+                        <strong style="color: var(--primary);">1x</strong> Cheesy Double Burger
+                    </span>
                     <span style="font-weight: 600; color: var(--primary-dark);">₹120</span>
                 </div>
+
                 <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">2x</strong> Cold Coffee Premium</span>
+                    <span style="color: var(--text-muted);">
+                        <strong style="color: var(--primary);">2x</strong> Cold Coffee Premium
+                    </span>
                     <span style="font-weight: 600; color: var(--primary-dark);">₹100</span>
                 </div>
             `;
         }
     }
 
-    document.getElementById('paymentForm').addEventListener('submit', function(e) {
-        // Clear cart on payment submission simulation
-        localStorage.removeItem('canteen_cart');
+    document.getElementById("paymentForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+        const selectedMethod = document.getElementById("selectedMethodInput").value;
+        const totalAmount = Number(document.getElementById("finalAmountInput").value);
+
+        let finalItems = [];
+
+        if (cart.length > 0) {
+            finalItems = cart.map(item => {
+                return {
+                    name: item.name,
+                    price: Number(item.price),
+                    quantity: Number(item.qty || item.quantity || 1)
+                };
+            });
+        } else {
+            finalItems = [
+                {
+                    name: "Cheesy Double Burger",
+                    price: 120,
+                    quantity: 1
+                },
+                {
+                    name: "Cold Coffee Premium",
+                    price: 50,
+                    quantity: 2
+                }
+            ];
+        }
+
+        const orderData = {
+            studentName: "Test Student",
+            studentEmail: "student@test.com",
+            studentPhone: "9876543210",
+            collegeName: "Mirai School of Technology",
+            items: finalItems,
+            totalAmount: totalAmount,
+            paymentMethod: selectedMethod,
+            upiTransactionId: selectedMethod === "UPI" ? "UPI_TEST_" + Date.now() : null
+        };
+
+        try {
+            const response = await fetch("/api/payment/create-order", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(orderData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                localStorage.removeItem("canteen_cart");
+                localStorage.removeItem("canteen_last_total");
+
+                alert("Order placed successfully!");
+                window.location.href = "/student/success";
+            } else {
+                alert(result.message || "Something went wrong while placing order");
+            }
+        } catch (error) {
+            console.error("Payment error:", error);
+            alert("Failed to place order. Please check server.");
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", loadOrderDetails);
+</script>
+
+<%- include("../partials/footer") %>
+<script>
+    function selectPaymentMethod(method, element) {
+        document.querySelectorAll('.payment-option-card').forEach(card => {
+            card.classList.remove('selected');
+            card.querySelector('.payment-option-radio').checked = false;
+        });
+
+        element.classList.add('selected');
+        element.querySelector('.payment-option-radio').checked = true;
+
+        document.getElementById('selectedMethodInput').value = method;
+
+        const button = document.querySelector(".checkout-btn");
+
+        if (method === "UPI") {
+            button.innerHTML = `Pay Now <span id="payButtonAmount">₹${document.getElementById("finalAmountInput").value}</span> 🚀`;
+        } else if (method === "PAY_LATER") {
+            button.innerHTML = `Place Order - Pay Later <span id="payButtonAmount">₹${document.getElementById("finalAmountInput").value}</span> 🕒`;
+        } else {
+            button.innerHTML = `Place Order <span id="payButtonAmount">₹${document.getElementById("finalAmountInput").value}</span> 🍽️`;
+        }
+    }
+
+    function loadOrderDetails() {
+        const cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
+        const total = localStorage.getItem('canteen_last_total') || '180';
+
+        document.getElementById('sumTotal').innerText = `₹${total}`;
+        document.getElementById('payButtonAmount').innerText = `₹${total}`;
+        document.getElementById('finalAmountInput').value = total;
+
+        const subtotalValue = Math.max(0, parseInt(total) - 20);
+        document.getElementById('sumSubtotal').innerText = `₹${subtotalValue}`;
+        document.getElementById('sumFees').innerText = `₹${parseInt(total) - subtotalValue}`;
+
+        const container = document.getElementById('paymentSummaryContainer');
+
+        if (cart.length > 0) {
+            container.innerHTML = cart.map(item => `
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <span style="color: var(--text-muted);">
+                        <strong style="color: var(--primary);">${item.qty}x</strong> ${item.name}
+                    </span>
+                    <span style="font-weight: 600; color: var(--primary-dark);">₹${item.price * item.qty}</span>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <span style="color: var(--text-muted);">
+                        <strong style="color: var(--primary);">1x</strong> Cheesy Double Burger
+                    </span>
+                    <span style="font-weight: 600; color: var(--primary-dark);">₹120</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <span style="color: var(--text-muted);">
+                        <strong style="color: var(--primary);">2x</strong> Cold Coffee Premium
+                    </span>
+                    <span style="font-weight: 600; color: var(--primary-dark);">₹100</span>
+                </div>
+            `;
+        }
+    }
+
+    document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
+        const total = Number(document.getElementById('finalAmountInput').value);
+        const selectedMethod = document.getElementById('selectedMethodInput').value;
+
+        let finalItems = [];
+
+        if (cart.length > 0) {
+            finalItems = cart.map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.qty
+            }));
+        } else {
+            finalItems = [
+                {
+                    name: "Cheesy Double Burger",
+                    price: 120,
+                    quantity: 1
+                },
+                {
+                    name: "Cold Coffee Premium",
+                    price: 50,
+                    quantity: 2
+                }
+            ];
+        }
+
+        const orderData = {
+            studentName: "Test Student",
+            studentEmail: "student@test.com",
+            studentPhone: "9876543210",
+            collegeName: "Mirai School of Technology",
+            items: finalItems,
+            totalAmount: total,
+            paymentMethod: selectedMethod,
+            upiTransactionId: selectedMethod === "UPI" ? "UPI_TEST_" + Date.now() : null
+        };
+
+        try {
+            const response = await fetch("/api/payment/create-order", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(orderData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                localStorage.removeItem('canteen_cart');
+                localStorage.removeItem('canteen_last_total');
+
+                alert("Order placed successfully!");
+                window.location.href = "/student/success";
+            } else {
+                alert(result.message || "Something went wrong");
+            }
+        } catch (error) {
+            console.error("Payment error:", error);
+            alert("Failed to place order");
+        }
     });
 
     document.addEventListener('DOMContentLoaded', loadOrderDetails);
 </script>
-
-<%- include("../partials/footer") %>

@@ -19,9 +19,9 @@
                         Add More Items
                     </a>
 
-                    <button class="add-btn" style="margin-left: 10px;">
+                    <a href="/student/payment" class="add-btn" style="margin-left: 10px; text-decoration: none;">
                         Place Order
-                    </button>
+                    </a>
                 </div>
 
             </div>
@@ -68,13 +68,18 @@
                     cartItem.className = "food-card";
                     cartItem.style.marginBottom = "16px";
 
+                    const isImageUrl = item.image && item.image.startsWith("http");
+
                     cartItem.innerHTML = `
                 <div class="food-card-content">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
 
                         <div style="display:flex; align-items:center; gap:16px;">
-                            <div style="font-size:42px;">
-                                ${item.image}
+                            <div style="width:70px; height:70px; border-radius:12px; background:#f5f5fb; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                                ${isImageUrl
+                            ? `<img src="${item.image}" alt="${item.name}" style="width:100%; height:100%; object-fit:cover;">`
+                            : `<span style="font-size:42px;">${item.image || "🍽️"}</span>`
+                        }
                             </div>
 
                             <div>
@@ -86,9 +91,18 @@
 
                         <div style="display:flex; align-items:center; gap:10px;">
                             <button class="add-btn decrease-btn" data-index="${index}">-</button>
-                            <span style="font-size:18px; font-weight:600;">${item.qty}</span>
+
+                            <span style="font-size:18px; font-weight:600;">
+                                ${item.qty}
+                            </span>
+
                             <button class="add-btn increase-btn" data-index="${index}">+</button>
-                            <button class="add-btn remove-btn" data-index="${index}" style="background:#ff4d4d; color:white;">
+
+                            <button 
+                                class="add-btn remove-btn" 
+                                data-index="${index}" 
+                                style="background:#ff4d4d; color:white;"
+                            >
                                 Delete
                             </button>
                         </div>
@@ -109,19 +123,22 @@
             function attachCartButtons() {
                 document.querySelectorAll(".increase-btn").forEach(btn => {
                     btn.addEventListener("click", function () {
-                        const index = this.dataset.index;
+                        const index = Number(this.dataset.index);
                         let cart = getCart();
 
-                        cart[index].qty += 1;
+                        if (!cart[index]) return;
 
+                        cart[index].qty += 1;
                         saveCart(cart);
                     });
                 });
 
                 document.querySelectorAll(".decrease-btn").forEach(btn => {
                     btn.addEventListener("click", function () {
-                        const index = this.dataset.index;
+                        const index = Number(this.dataset.index);
                         let cart = getCart();
+
+                        if (!cart[index]) return;
 
                         cart[index].qty -= 1;
 
@@ -135,11 +152,12 @@
 
                 document.querySelectorAll(".remove-btn").forEach(btn => {
                     btn.addEventListener("click", function () {
-                        const index = this.dataset.index;
+                        const index = Number(this.dataset.index);
                         let cart = getCart();
 
-                        cart.splice(index, 1);
+                        if (!cart[index]) return;
 
+                        cart.splice(index, 1);
                         saveCart(cart);
                     });
                 });

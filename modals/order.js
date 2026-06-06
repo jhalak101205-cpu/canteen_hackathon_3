@@ -35,6 +35,10 @@ const orderSchema = new mongoose.Schema(
                     type: String
                 },
 
+                category: {
+                    type: String
+                },
+
                 qty: {
                     type: Number,
                     required: true,
@@ -43,7 +47,22 @@ const orderSchema = new mongoose.Schema(
             }
         ],
 
-        totalAmount: {
+        itemTotal: {
+            type: Number,
+            required: true
+        },
+
+        packingCharge: {
+            type: Number,
+            default: 10
+        },
+
+        gstAmount: {
+            type: Number,
+            required: true
+        },
+
+        grandTotal: {
             type: Number,
             required: true
         },
@@ -51,7 +70,13 @@ const orderSchema = new mongoose.Schema(
         paymentMethod: {
             type: String,
             enum: ["cash", "upi"],
-            default: "cash"
+            required: true
+        },
+
+        paymentStatus: {
+            type: String,
+            enum: ["pending", "paid"],
+            default: "pending"
         },
 
         status: {

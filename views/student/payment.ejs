@@ -1,140 +1,458 @@
 <%- include("../partials/header") %>
-<%- include("../partials/navbar") %>
+    <%- include("../partials/navbar") %>
 
-<main class="student-layout">
-    <div class="container">
-        <h2 style="margin-bottom: 24px;">Checkout Payment</h2>
-        
-        <div class="payment-grid">
-            <!-- Left Side: Select Payment Method -->
-            <div>
-                <h3 style="font-size: 18px; margin-bottom: 16px;">Choose Payment Method</h3>
-                
-                <!-- Backend route will be added here -->
-                <form action="" method="POST" id="paymentForm">
-                    <input type="hidden" name="selectedMethod" id="selectedMethodInput" value="UPI">
-                    <input type="hidden" name="finalAmount" id="finalAmountInput" value="180">
-                    
-                    <div class="payment-options">
-                        <!-- UPI -->
-                        <div class="payment-option-card selected" onclick="selectPaymentMethod('UPI', this)">
-                            <div class="payment-option-icon">📱</div>
-                            <div class="payment-option-details">
-                                <span class="payment-option-title">UPI (GPay / PhonePe / Paytm)</span>
-                                <span class="payment-option-desc">Scan QR code or enter UPI ID for instant checkout</span>
-                            </div>
-                            <input type="radio" class="payment-option-radio" name="pay_radio" checked style="margin-left: auto;">
+        <style>
+            .payment-page {
+                display: grid;
+                grid-template-columns: 1.3fr 1fr;
+                gap: 32px;
+                align-items: flex-start;
+            }
+
+            .payment-left,
+            .order-summary-box {
+                background: white;
+                border-radius: 24px;
+                padding: 28px;
+                box-shadow: 0 8px 24px rgba(32, 16, 52, 0.08);
+                border: 1px solid #eeeeee;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 800;
+                color: #2b0a3d;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 14px;
+                border-radius: 12px;
+                border: 1px solid #ddd;
+                font-size: 15px;
+            }
+
+            .payment-option {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 18px;
+                padding: 22px;
+                border: 2px solid #e5e5ef;
+                border-radius: 18px;
+                margin-bottom: 18px;
+                cursor: pointer;
+                background: white;
+            }
+
+            .payment-option.active {
+                border-color: #3b0754;
+                background: #f3ecf7;
+            }
+
+            .payment-option-left {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+            }
+
+            .payment-icon {
+                font-size: 30px;
+            }
+
+            .payment-option h3 {
+                margin: 0 0 6px;
+                color: #1f1f2e;
+            }
+
+            .payment-option p {
+                margin: 0;
+                color: #6b6b7c;
+            }
+
+            .radio-circle {
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                border: 2px solid #777;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .payment-option.active .radio-circle::after {
+                content: "";
+                width: 12px;
+                height: 12px;
+                background: #3b0754;
+                border-radius: 50%;
+            }
+
+            .pay-btn {
+                width: 100%;
+                padding: 16px;
+                border: none;
+                border-radius: 16px;
+                background: #098b22;
+                color: white;
+                font-weight: 900;
+                font-size: 17px;
+                cursor: pointer;
+                margin-top: 12px;
+            }
+
+            .pay-btn:hover {
+                background: #08751e;
+            }
+
+            .summary-row,
+            .summary-item {
+                display: flex;
+                justify-content: space-between;
+                gap: 18px;
+                margin: 14px 0;
+                color: #6b6b7c;
+            }
+
+            .summary-total {
+                color: #2b0a3d;
+                font-weight: 900;
+                font-size: 20px;
+            }
+
+            .qr-modal {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.55);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            }
+
+            .qr-modal.show {
+                display: flex;
+            }
+
+            .qr-box {
+                background: white;
+                padding: 28px;
+                border-radius: 24px;
+                width: 380px;
+                text-align: center;
+                box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+            }
+
+            .qr-box h2 {
+                color: #2b0a3d;
+                margin-top: 0;
+            }
+
+            .qr-img {
+                width: 240px;
+                height: 240px;
+                object-fit: contain;
+                margin: 18px auto;
+                display: block;
+                border: 1px solid #eeeeee;
+                border-radius: 16px;
+                padding: 10px;
+            }
+
+            .modal-actions {
+                display: flex;
+                gap: 12px;
+                margin-top: 18px;
+            }
+
+            .modal-actions button {
+                flex: 1;
+                padding: 13px;
+                border-radius: 12px;
+                font-weight: 800;
+                cursor: pointer;
+            }
+
+            .paid-btn {
+                border: none;
+                background: #098b22;
+                color: white;
+            }
+
+            .cancel-btn {
+                border: 1px solid crimson;
+                background: white;
+                color: crimson;
+            }
+
+            @media (max-width: 900px) {
+                .payment-page {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+
+        <main class="student-layout">
+            <div class="container">
+
+                <h2 style="margin-bottom: 24px;">Checkout Payment</h2>
+
+                <div class="payment-page">
+
+                    <div class="payment-left">
+
+                        <h3 style="margin-bottom: 18px;">Student Details</h3>
+
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="studentName" placeholder="Enter your name">
                         </div>
 
-                        <!-- Card -->
-                        <div class="payment-option-card" onclick="selectPaymentMethod('Card', this)">
-                            <div class="payment-option-icon">💳</div>
-                            <div class="payment-option-details">
-                                <span class="payment-option-title">Credit or Debit Card</span>
-                                <span class="payment-option-desc">Visa, Mastercard, RuPay, Diners Club supported</span>
-                            </div>
-                            <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" id="phone" placeholder="Enter phone number">
                         </div>
 
-                        <!-- Cash at Counter -->
-                        <div class="payment-option-card" onclick="selectPaymentMethod('Cash', this)">
-                            <div class="payment-option-icon">💵</div>
-                            <div class="payment-option-details">
-                                <span class="payment-option-title">Pay Cash at Counter</span>
-                                <span class="payment-option-desc">Order now and pay cash at canteen delivery counter</span>
+                        <h3 style="margin: 28px 0 18px;">Choose Payment Method</h3>
+
+                        <div class="payment-option" id="upiOption" onclick="selectPayment('upi')">
+                            <div class="payment-option-left">
+                                <div class="payment-icon">📱</div>
+                                <div>
+                                    <h3>UPI</h3>
+                                    <p>Scan canteen QR and pay instantly</p>
+                                </div>
                             </div>
-                            <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
+                            <div class="radio-circle"></div>
                         </div>
+
+                        <div class="payment-option active" id="cashOption" onclick="selectPayment('cash')">
+                            <div class="payment-option-left">
+                                <div class="payment-icon">💵</div>
+                                <div>
+                                    <h3>Pay Cash at Counter</h3>
+                                    <p>Order now and pay cash at canteen counter</p>
+                                </div>
+                            </div>
+                            <div class="radio-circle"></div>
+                        </div>
+
+                        <button class="pay-btn" onclick="handlePayButton()" id="payBtn">
+                            Place Order
+                        </button>
+
                     </div>
 
-                    <button type="submit" class="checkout-btn" style="margin-top: 30px;">
-                        Pay Now <span id="payButtonAmount">₹180</span> 🚀
-                    </button>
-                </form>
+                    <div class="order-summary-box">
+                        <h3 style="color:#2b0a3d;">Order Summary</h3>
+                        <hr>
+                        <div id="orderSummary"></div>
+                    </div>
+
+                </div>
+
             </div>
-            
-            <!-- Right Side: Order Summary -->
-            <div class="bill-summary-card" style="height: fit-content;">
-                <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">Order Summary</h3>
-                
-                <div id="paymentSummaryContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                    <!-- Items will be loaded from localstorage -->
-                </div>
-                
-                <div class="bill-row">
-                    <span>Subtotal</span>
-                    <span id="sumSubtotal">₹160</span>
-                </div>
-                <div class="bill-row">
-                    <span>Packing & Taxes</span>
-                    <span id="sumFees">₹20</span>
-                </div>
-                <div class="bill-row total">
-                    <span>Amount Payable</span>
-                    <span id="sumTotal">₹180</span>
+        </main>
+
+        <div class="qr-modal" id="qrModal">
+            <div class="qr-box">
+                <h2>Scan & Pay</h2>
+                <p>Scan the canteen UPI QR code and complete payment.</p>
+
+                <img src="/images/upi-qr.png" alt="Canteen UPI QR" class="qr-img">
+
+                <h3>Amount: ₹<span id="qrAmount">0</span></h3>
+
+                <div class="modal-actions">
+                    <button class="cancel-btn" onclick="closeQrModal()">Cancel</button>
+                    <button class="paid-btn" onclick="confirmUpiPayment()">I have paid</button>
                 </div>
             </div>
         </div>
-    </div>
-</main>
 
-<!-- Vanilla JS Payment Logic -->
-<script>
-    function selectPaymentMethod(method, element) {
-        // Deselect all
-        document.querySelectorAll('.payment-option-card').forEach(card => {
-            card.classList.remove('selected');
-            card.querySelector('.payment-option-radio').checked = false;
-        });
-        
-        // Select clicked
-        element.classList.add('selected');
-        element.querySelector('.payment-option-radio').checked = true;
-        
-        // Update input
-        document.getElementById('selectedMethodInput').value = method;
-    }
+        <script>
+            let selectedPaymentMethod = "cash";
 
-    function loadOrderDetails() {
-        const cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
-        const total = localStorage.getItem('canteen_last_total') || '180';
-        
-        document.getElementById('sumTotal').innerText = `₹${total}`;
-        document.getElementById('payButtonAmount').innerText = `₹${total}`;
-        document.getElementById('finalAmountInput').value = total;
-        
-        const subtotalValue = Math.max(0, parseInt(total) - 20); // Estimation logic
-        document.getElementById('sumSubtotal').innerText = `₹${subtotalValue}`;
-        document.getElementById('sumFees').innerText = `₹${parseInt(total) - subtotalValue}`;
-        
-        const container = document.getElementById('paymentSummaryContainer');
-        if (cart.length > 0) {
-            container.innerHTML = cart.map(item => `
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">${item.qty}x</strong> ${item.name}</span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹${item.price * item.qty}</span>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">1x</strong> Cheesy Double Burger</span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹120</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);"><strong style="color: var(--primary);">2x</strong> Cold Coffee Premium</span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹100</span>
+            function getCart() {
+                return JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+            }
+
+            function calculateBill(cart) {
+                const itemTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+                const packingCharge = cart.length > 0 ? 10 : 0;
+                const gstAmount = Math.round(itemTotal * 0.05);
+                const grandTotal = itemTotal + packingCharge + gstAmount;
+
+                return {
+                    itemTotal,
+                    packingCharge,
+                    gstAmount,
+                    grandTotal
+                };
+            }
+
+            function selectPayment(method) {
+                selectedPaymentMethod = method;
+
+                const upiOption = document.getElementById("upiOption");
+                const cashOption = document.getElementById("cashOption");
+                const payBtn = document.getElementById("payBtn");
+
+                upiOption.classList.remove("active");
+                cashOption.classList.remove("active");
+
+                if (method === "upi") {
+                    upiOption.classList.add("active");
+                    payBtn.innerText = "Open UPI Scanner";
+                } else {
+                    cashOption.classList.add("active");
+                    payBtn.innerText = "Place Order";
+                }
+            }
+
+            function renderOrderSummary() {
+                const cart = getCart();
+                const orderSummary = document.getElementById("orderSummary");
+
+                if (cart.length === 0) {
+                    orderSummary.innerHTML = `
+                <p>Your cart is empty.</p>
+                <a href="/student/menu">Go to Menu</a>
+            `;
+                    return;
+                }
+
+                const bill = calculateBill(cart);
+
+                let html = "";
+
+                cart.forEach(item => {
+                    html += `
+                <div class="summary-item">
+                    <span><b>${item.qty}x</b> ${item.name}</span>
+                    <span>₹${item.price * item.qty}</span>
                 </div>
             `;
-        }
-    }
+                });
 
-    document.getElementById('paymentForm').addEventListener('submit', function(e) {
-        // Clear cart on payment submission simulation
-        localStorage.removeItem('canteen_cart');
-    });
+                html += `
+            <hr>
 
-    document.addEventListener('DOMContentLoaded', loadOrderDetails);
-</script>
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>₹${bill.itemTotal}</span>
+            </div>
 
-<%- include("../partials/footer") %>
+            <div class="summary-row">
+                <span>Packing & Taxes</span>
+                <span>₹${bill.packingCharge + bill.gstAmount}</span>
+            </div>
+
+            <hr>
+
+            <div class="summary-row summary-total">
+                <span>Amount Payable</span>
+                <span>₹${bill.grandTotal}</span>
+            </div>
+        `;
+
+                orderSummary.innerHTML = html;
+            }
+
+            function validateStudentDetails() {
+                const studentName = document.getElementById("studentName").value.trim();
+                const phone = document.getElementById("phone").value.trim();
+
+                if (!studentName || !phone) {
+                    alert("Please enter your name and phone number");
+                    return false;
+                }
+
+                return true;
+            }
+
+            function handlePayButton() {
+                const cart = getCart();
+
+                if (cart.length === 0) {
+                    alert("Your cart is empty");
+                    return;
+                }
+
+                if (!validateStudentDetails()) {
+                    return;
+                }
+
+                if (selectedPaymentMethod === "cash") {
+                    placeOrder("cash", "pending");
+                } else {
+                    openQrModal();
+                }
+            }
+
+            function openQrModal() {
+                const cart = getCart();
+                const bill = calculateBill(cart);
+
+                document.getElementById("qrAmount").innerText = bill.grandTotal;
+                document.getElementById("qrModal").classList.add("show");
+            }
+
+            function closeQrModal() {
+                document.getElementById("qrModal").classList.remove("show");
+            }
+
+            function confirmUpiPayment() {
+                placeOrder("upi", "paid");
+            }
+
+            async function placeOrder(paymentMethod, paymentStatus) {
+                const cart = getCart();
+
+                const studentName = document.getElementById("studentName").value.trim();
+                const phone = document.getElementById("phone").value.trim();
+                const bill = calculateBill(cart);
+
+                try {
+                    const response = await fetch("/student/order/place", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            studentName,
+                            phone,
+                            items: cart,
+                            itemTotal: bill.itemTotal,
+                            packingCharge: bill.packingCharge,
+                            gstAmount: bill.gstAmount,
+                            grandTotal: bill.grandTotal,
+                            paymentMethod,
+                            paymentStatus
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.removeItem("canteen_cart");
+                        localStorage.setItem("last_order_id", data.orderId);
+                        window.location.href = "/student/success";
+                    } else {
+                        alert(data.message || "Order failed");
+                    }
+                } catch (err) {
+                    console.log(err);
+                    alert("Something went wrong while placing order");
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", renderOrderSummary);
+        </script>
+
+        <%- include("../partials/footer") %>

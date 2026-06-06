@@ -194,4 +194,64 @@
             document.addEventListener("DOMContentLoaded", updateFloatingBar);
         </script>
 
-        <%- include("../partials/footer") %>
+        <!-- Student OTP Authentication Modal Overlay -->
+        <% if (typeof session==='undefined' || !session.isStudent || !session.studentName) { %>
+            <div id="student-auth-overlay" class="auth-overlay">
+                <div class="auth-modal-card">
+                    <div class="auth-modal-header">
+                        <h3 class="auth-modal-title">⚡ Student Login / Register</h3>
+                        <p class="auth-modal-subtitle">Enter your email — new users are registered automatically</p>
+                    </div>
+
+                    <div class="auth-modal-body">
+                        <!-- Alert message container -->
+                        <div id="auth-alert" class="auth-alert" style="display: none;"></div>
+
+                        <!-- Step 1: Email Input Section -->
+                        <div id="auth-step-email" class="auth-step"
+                            style="<%= (typeof session !== 'undefined' && session.isStudent) ? 'display: none;' : '' %>">
+                            <div class="form-group">
+                                <label for="auth-email" class="form-label">Student Email Address</label>
+                                <input type="email" id="auth-email" class="form-input"
+                                    placeholder="Enter student email (e.g. name@college.edu)" required>
+                            </div>
+                            <button type="button" id="btn-send-otp" class="auth-btn student">
+                                Continue →
+                            </button>
+                        </div>
+
+                        <!-- Step 2: OTP Input Section -->
+                        <div id="auth-step-otp" class="auth-step" style="display: none;">
+                            <div class="form-group">
+                                <label for="auth-otp" class="form-label">Password / PIN</label>
+                                <input type="text" id="auth-otp" class="form-input" placeholder="Enter password (default: 123456)"
+                                    maxLength="6" required>
+                            </div>
+                            <div class="auth-modal-resend">
+                                Wrong email? <button type="button" id="btn-resend-otp"
+                                    class="resend-link">Go Back</button>
+                            </div>
+                            <button type="button" id="btn-verify-otp" class="auth-btn student">
+                                Login / Register ✓
+                            </button>
+                        </div>
+
+                        <!-- Step 3: Name Input Section -->
+                        <div id="auth-step-name" class="auth-step"
+                            style=" <%= (typeof session !== 'undefined' && session.isStudent && !session.studentName) ? 'display: flex;' : 'display: none;' %>">
+                            <div class="form-group">
+                                <label for="auth-name" class="form-label">Your Full Name</label>
+                                <input type="text" id="auth-name" class="form-input" placeholder="Enter your full name"
+                                    required>
+                            </div>
+                            <button type="button" id="btn-save-name" class="auth-btn student">
+                                Continue to Menu ➔
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script src="/js/studentAuth.js" defer></script>
+            <% } %>
+
+                <%- include("../partials/footer") %>

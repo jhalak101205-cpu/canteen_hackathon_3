@@ -8,8 +8,7 @@
             <p class="auth-subtitle">Manage menu items, track incoming orders, and toggle status</p>
         </div>
         
-        <!-- Backend route will be added here -->
-        <form action="" method="POST">
+        <form action="/auth/adminLogin" method="POST">
             <div class="form-group">
                 <label for="email" class="form-label">Admin Email</label>
                 <input 
@@ -40,8 +39,8 @@
         </form>
         
         <div class="auth-footer">
-            <p>Looking for the student portal? <!-- Backend route will be added here --> <a href="" style="color: var(--accent);">Student Login</a></p>
-            <p style="margin-top: 10px;"><a href="">Back to Home</a></p>
+            <p>Looking for the student portal? <a href="/auth/studentLogin" style="color: var(--accent);">Student Login</a></p>
+            <p style="margin-top: 10px;"><a href="/">Back to Home</a></p>
         </div>
     </div>
 </main>

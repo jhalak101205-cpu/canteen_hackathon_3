@@ -1,199 +1,160 @@
 <%- include("../partials/header") %>
-<%- include("../partials/navbar") %>
+    <%- include("../partials/navbar") %>
 
-<main class="student-layout">
-    <div class="container">
-        <h2 style="margin-bottom: 24px;">Your Cart 🛒</h2>
+        <main class="student-layout">
+            <div class="container">
 
-        <div class="cart-grid">
-            <!-- Left Side: Cart Items -->
-            <div class="cart-items-card">
-                <div class="cart-title-row">
-                    <h3 style="font-size: 20px;">Review Items</h3>
-                    <span id="itemCountLabel" style="color: var(--accent); font-weight: 700;">0 Items</span>
-                </div>
+                <h2 style="margin-bottom: 24px;">Your Cart 🛒</h2>
 
-                <div id="cartItemsContainer">
-                    <!-- Cart items will load here -->
-                </div>
+                <div id="cartContainer"></div>
 
-                <div id="emptyCartView" style="display: none; text-align: center; padding: 40px 20px;">
-                    <span style="font-size: 64px;">🛒</span>
-                    <h3 style="margin: 16px 0 8px 0;">Your cart is empty</h3>
-                    <p style="color: var(--text-muted); margin-bottom: 24px;">
-                        Add some delicious items from our menu.
-                    </p>
-                    <a href="/student/menu" class="success-btn" style="background-color: var(--accent);">
-                        Browse Menu
-                    </a>
-                </div>
-            </div>
+                <div id="cartSummary" style="margin-top: 30px; display: none;">
+                    <h3>Total: ₹<span id="cartTotal">0</span></h3>
 
-            <!-- Right Side: Bill Summary -->
-            <div class="bill-summary-card">
-                <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">
-                    Bill Details
-                </h3>
-
-                <div class="bill-row">
-                    <span>Item Total</span>
-                    <span id="billSubtotal">₹0</span>
-                </div>
-
-                <div class="bill-row">
-                    <span>Canteen Packing Charge</span>
-                    <span>₹10</span>
-                </div>
-
-                <div class="bill-row">
-                    <span>GST (5%)</span>
-                    <span id="billTax">₹0</span>
-                </div>
-
-                <div class="bill-row total">
-                    <span>Grand Total</span>
-                    <span id="billGrandTotal">₹0</span>
-                </div>
-
-                <button type="button" class="checkout-btn" id="proceedToPaymentBtn">
-                    Proceed to Payment 💳
-                </button>
-
-                <button type="button" class="add-btn" id="clearCartBtn" style="margin-top: 12px; width: 100%;">
-                    Clear Cart
-                </button>
-
-                <div style="margin-top: 20px; display: flex; align-items: center; gap: 8px; justify-content: center; font-size: 12px; color: var(--text-muted); font-weight: 500;">
-                    🛡️ Secure Checkout Powered by Canteen Express
-                </div>
-            </div>
-        </div>
-    </div>
-</main>
-
-<script>
-    function getCart() {
-        return JSON.parse(localStorage.getItem("canteen_cart") || "[]");
-    }
-
-    function saveCart(cart) {
-        localStorage.setItem("canteen_cart", JSON.stringify(cart));
-        renderCart();
-    }
-
-    function updateQuantity(index, change) {
-        const cart = getCart();
-
-        cart[index].qty += change;
-
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1);
-        }
-
-        saveCart(cart);
-    }
-
-    function removeItem(index) {
-        const cart = getCart();
-        cart.splice(index, 1);
-        saveCart(cart);
-    }
-
-    function renderCart() {
-        const cart = getCart();
-
-        const cartItemsContainer = document.getElementById("cartItemsContainer");
-        const emptyCartView = document.getElementById("emptyCartView");
-        const itemCountLabel = document.getElementById("itemCountLabel");
-        const billSummaryCard = document.querySelector(".bill-summary-card");
-
-        cartItemsContainer.innerHTML = "";
-
-        if (cart.length === 0) {
-            emptyCartView.style.display = "block";
-            billSummaryCard.style.display = "none";
-            itemCountLabel.innerText = "0 Items";
-            return;
-        }
-
-        emptyCartView.style.display = "none";
-        billSummaryCard.style.display = "block";
-
-        let subtotal = 0;
-        let totalQty = 0;
-
-        cart.forEach((item, index) => {
-            const quantity = Number(item.qty || item.quantity || 1);
-            const price = Number(item.price || 0);
-            const itemTotal = price * quantity;
-
-            subtotal += itemTotal;
-            totalQty += quantity;
-
-            const cartItem = document.createElement("div");
-            cartItem.className = "cart-item";
-
-            cartItem.innerHTML = `
-                <div class="flex-center" style="font-size: 32px; width: 64px; height: 64px; background-color: var(--bg-main); border-radius: var(--radius-sm);">
-                    ${item.image || "🍽️"}
-                </div>
-
-                <div class="cart-item-details">
-                    <span class="cart-item-name">${item.name}</span>
-                    <span class="cart-item-meta">₹${price} each</span>
-                </div>
-
-                <div class="qty-selector">
-                    <button type="button" class="qty-btn" onclick="updateQuantity(${index}, -1)">-</button>
-                    <div class="qty-val">${quantity}</div>
-                    <button type="button" class="qty-btn" onclick="updateQuantity(${index}, 1)">+</button>
-                </div>
-
-                <div class="cart-item-price">
-                    ₹${itemTotal}
-                    <button type="button" class="remove-btn" onclick="removeItem(${index})" title="Remove Item">
-                        🗑️
+                    <button id="clearCartBtn" class="add-btn" style="margin-top: 12px;">
+                        Clear Cart
                     </button>
+
+                    <a href="/student/menu" class="checkout-link" style="margin-left: 10px;">
+                        Add More Items
+                    </a>
+
+                    <button class="add-btn" style="margin-left: 10px;">
+                        Place Order
+                    </button>
+                </div>
+
+            </div>
+        </main>
+
+        <script>
+            function getCart() {
+                return JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+            }
+
+            function saveCart(cart) {
+                localStorage.setItem("canteen_cart", JSON.stringify(cart));
+                renderCart();
+            }
+
+            function renderCart() {
+                const cart = getCart();
+
+                const cartContainer = document.getElementById("cartContainer");
+                const cartSummary = document.getElementById("cartSummary");
+                const cartTotal = document.getElementById("cartTotal");
+
+                cartContainer.innerHTML = "";
+
+                if (cart.length === 0) {
+                    cartContainer.innerHTML = `
+                <div style="text-align:center; margin-top:40px;">
+                    <h3>Your cart is empty 😭</h3>
+                    <p>Add some tasty items from the menu.</p>
+                    <a href="/student/menu" class="checkout-link">Go to Menu</a>
                 </div>
             `;
 
-            cartItemsContainer.appendChild(cartItem);
-        });
+                    cartSummary.style.display = "none";
+                    return;
+                }
 
-        const packingCharge = 10;
-        const tax = Math.round(subtotal * 0.05);
-        const grandTotal = subtotal + packingCharge + tax;
+                let total = 0;
 
-        itemCountLabel.innerText = `${totalQty} Item${totalQty > 1 ? "s" : ""}`;
+                cart.forEach((item, index) => {
+                    total += item.price * item.qty;
 
-        document.getElementById("billSubtotal").innerText = `₹${subtotal}`;
-        document.getElementById("billTax").innerText = `₹${tax}`;
-        document.getElementById("billGrandTotal").innerText = `₹${grandTotal}`;
+                    const cartItem = document.createElement("div");
+                    cartItem.className = "food-card";
+                    cartItem.style.marginBottom = "16px";
 
-        localStorage.setItem("canteen_last_total", grandTotal);
-    }
+                    cartItem.innerHTML = `
+                <div class="food-card-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
 
-    document.getElementById("proceedToPaymentBtn").addEventListener("click", function () {
-        const cart = getCart();
+                        <div style="display:flex; align-items:center; gap:16px;">
+                            <div style="font-size:42px;">
+                                ${item.image}
+                            </div>
 
-        if (cart.length === 0) {
-            alert("Your cart is empty. Please add items first.");
-            return;
-        }
+                            <div>
+                                <h3 class="food-title">${item.name}</h3>
+                                <p class="food-desc">${item.category || "Canteen Item"}</p>
+                                <div class="food-price">₹${item.price}</div>
+                            </div>
+                        </div>
 
-        const grandTotalText = document.getElementById("billGrandTotal").innerText.replace("₹", "");
-        localStorage.setItem("canteen_last_total", grandTotalText);
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button class="add-btn decrease-btn" data-index="${index}">-</button>
+                            <span style="font-size:18px; font-weight:600;">${item.qty}</span>
+                            <button class="add-btn increase-btn" data-index="${index}">+</button>
+                            <button class="add-btn remove-btn" data-index="${index}" style="background:#ff4d4d; color:white;">
+                                Delete
+                            </button>
+                        </div>
 
-        window.location.href = "/student/payment";
-    });
+                    </div>
+                </div>
+            `;
 
-    document.getElementById("clearCartBtn").addEventListener("click", function () {
-        localStorage.removeItem("canteen_cart");
-        localStorage.removeItem("canteen_last_total");
-        renderCart();
-    });
+                    cartContainer.appendChild(cartItem);
+                });
 
-    document.addEventListener("DOMContentLoaded", renderCart);
-</script>
+                cartTotal.innerText = total;
+                cartSummary.style.display = "block";
 
-<%- include("../partials/footer") %>
+                attachCartButtons();
+            }
+
+            function attachCartButtons() {
+                document.querySelectorAll(".increase-btn").forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const index = this.dataset.index;
+                        let cart = getCart();
+
+                        cart[index].qty += 1;
+
+                        saveCart(cart);
+                    });
+                });
+
+                document.querySelectorAll(".decrease-btn").forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const index = this.dataset.index;
+                        let cart = getCart();
+
+                        cart[index].qty -= 1;
+
+                        if (cart[index].qty <= 0) {
+                            cart.splice(index, 1);
+                        }
+
+                        saveCart(cart);
+                    });
+                });
+
+                document.querySelectorAll(".remove-btn").forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const index = this.dataset.index;
+                        let cart = getCart();
+
+                        cart.splice(index, 1);
+
+                        saveCart(cart);
+                    });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                renderCart();
+
+                const clearCartBtn = document.getElementById("clearCartBtn");
+
+                clearCartBtn.addEventListener("click", () => {
+                    localStorage.removeItem("canteen_cart");
+                    renderCart();
+                });
+            });
+        </script>
+
+        <%- include("../partials/footer") %>

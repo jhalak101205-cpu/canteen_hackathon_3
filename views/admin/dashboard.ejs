@@ -15,7 +15,6 @@
         
         <!-- Metrics Grid -->
         <div class="admin-metrics">
-            <!-- Total Orders -->
             <div class="metric-card orders">
                 <div class="metric-info">
                     <h3>Total Orders</h3>
@@ -24,7 +23,6 @@
                 <div class="metric-icon-box">📦</div>
             </div>
 
-            <!-- Pending Orders -->
             <div class="metric-card pending">
                 <div class="metric-info">
                     <h3>Pending Orders</h3>
@@ -33,7 +31,6 @@
                 <div class="metric-icon-box">⏳</div>
             </div>
 
-            <!-- Revenue -->
             <div class="metric-card revenue">
                 <div class="metric-info">
                     <h3>Today's Revenue</h3>
@@ -45,3 +42,27 @@
         
         <!-- Action Pathways Grid -->
         <h3 style="margin-bottom: 20px; font-size: 20px;">Administrative Actions</h3>
+        
+        <div class="admin-actions-grid">
+            <div class="admin-action-card">
+                <div class="admin-action-icon">🧾</div>
+                <h4 class="admin-action-title">Manage Incoming Orders</h4>
+                <p class="admin-action-desc">View active tokens, prepare dishes, update fulfillment tracking, and trigger status updates.</p>
+                <a href="/admin/orders" class="admin-action-btn">
+                    View Live Orders ➔
+                </a>
+            </div>
+
+            <div class="admin-action-card">
+                <div class="admin-action-icon">📋</div>
+                <h4 class="admin-action-title">Manage Canteen Menu</h4>
+                <p class="admin-action-desc">Add new foods, update pricing models, upload descriptions, and toggle item availability details.</p>
+                <a href="/admin/menu" class="admin-action-btn secondary">
+                    Manage Menu ➔
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include("../partials/footer") %>

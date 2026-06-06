@@ -11,6 +11,7 @@
         <div class="nav-links">
             <a href="/student/menu" class="nav-link">Menu</a>
             <a href="/student/cart" class="nav-link">Cart</a>
+            <a href="/auth/studentLogin" class="nav-link">Student Login</a>
             <% if (typeof session !== 'undefined' && session.isStudent) { %>
                 <span class="nav-link" style="color: var(--accent); font-weight: 700;">👋 <%= session.studentName || 'Student' %></span>
                 <form action="/api/auth/logout" method="POST" style="display: inline; margin: 0; padding: 0;">

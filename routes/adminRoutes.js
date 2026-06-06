@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Admin = require('../modals/AdminSchema');
-const Order = require('../modals/UserSchema'); // your Order model
+const Order = require('../modals/OrderSchema');
+const Menu = require('../modals/studentMenu');
 
 // Middleware to protect admin routes
 function isAdmin(req, res, next) {
@@ -9,11 +10,14 @@ function isAdmin(req, res, next) {
     res.redirect('/auth/adminLogin');
 }
 
-// POST /auth/adminLogin — handle login form
+// ─────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────
+
 router.post('/auth/adminLogin', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const admin = await Admin.findOne({ email, password }); // hash passwords in prod!
+        const admin = await Admin.findOne({ email, password });
         if (!admin) {
             return res.render('auth/adminLogin', { error: 'Invalid credentials' });
         }
@@ -26,20 +30,26 @@ router.post('/auth/adminLogin', async (req, res) => {
     }
 });
 
-// GET /admin/dashboard
+router.get('/admin/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/auth/adminLogin');
+});
+
+// ─────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────
+
 router.get('/admin/dashboard', isAdmin, async (req, res) => {
     try {
         const totalOrders = await Order.countDocuments();
         const pendingOrders = await Order.countDocuments({
             status: { $in: ['Preparing', 'Ready'] }
         });
-        // Sum up revenue from delivered orders
         const revenueData = await Order.aggregate([
             { $match: { status: 'Delivered' } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } }
         ]);
         const revenue = revenueData[0]?.total || 0;
-
         res.render('admin/dashboard', { totalOrders, pendingOrders, revenue });
     } catch (err) {
         console.error(err);
@@ -47,7 +57,10 @@ router.get('/admin/dashboard', isAdmin, async (req, res) => {
     }
 });
 
-// GET /admin/orders — show all real orders
+// ─────────────────────────────────────
+// ORDERS
+// ─────────────────────────────────────
+
 router.get('/admin/orders', isAdmin, async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
@@ -58,29 +71,95 @@ router.get('/admin/orders', isAdmin, async (req, res) => {
     }
 });
 
-// POST /admin/orders/:id/status — update order status (used by buttons + socket)
 router.post('/admin/orders/:id/status', isAdmin, async (req, res) => {
-    const { status } = req.body; // 'Preparing' | 'Ready' | 'Delivered'
+    const { status } = req.body;
     try {
         const order = await Order.findByIdAndUpdate(
             req.params.id,
             { status },
             { new: true }
         );
-        // Emit real-time update to the student
         const io = req.app.get('io');
         io.emit(`order-status-${order.token}`, { status });
-
         res.json({ success: true, status: order.status });
     } catch (err) {
         res.status(500).json({ success: false });
     }
 });
 
-// GET /admin/logout
-router.get('/admin/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/auth/adminLogin');
+// ─────────────────────────────────────
+// MENU MANAGEMENT
+// ─────────────────────────────────────
+
+// GET /admin/menu — show all menu items
+router.get('/admin/menu', isAdmin, async (req, res) => {
+    try {
+        const menuItems = await Menu.find().sort({ category: 1 });
+        res.render('admin/menu', { menuItems });
+    } catch (err) {
+        console.error(err);
+        res.render('admin/menu', { menuItems: [] });
+    }
+});
+
+// POST /admin/menu/add — add new menu item
+router.post('/admin/menu/add', isAdmin, async (req, res) => {
+    const { itemName, description, price, category, image } = req.body;
+    try {
+        await Menu.create({
+            itemName,
+            description,
+            price: Number(price),
+            category,
+            image: image || undefined, // falls back to schema default if empty
+            isAvailable: true
+        });
+        res.redirect('/admin/menu');
+    } catch (err) {
+        console.error(err);
+        res.redirect('/admin/menu');
+    }
+});
+
+// POST /admin/menu/:id/edit — edit existing menu item
+router.post('/admin/menu/:id/edit', isAdmin, async (req, res) => {
+    const { itemName, description, price, category, image } = req.body;
+    try {
+        await Menu.findByIdAndUpdate(req.params.id, {
+            itemName,
+            description,
+            price: Number(price),
+            category,
+            image
+        });
+        res.redirect('/admin/menu');
+    } catch (err) {
+        console.error(err);
+        res.redirect('/admin/menu');
+    }
+});
+
+// POST /admin/menu/:id/toggle — toggle isAvailable
+router.post('/admin/menu/:id/toggle', isAdmin, async (req, res) => {
+    try {
+        const item = await Menu.findById(req.params.id);
+        item.isAvailable = !item.isAvailable;
+        await item.save();
+        res.json({ success: true, isAvailable: item.isAvailable });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// POST /admin/menu/:id/delete — delete menu item
+router.post('/admin/menu/:id/delete', isAdmin, async (req, res) => {
+    try {
+        await Menu.findByIdAndDelete(req.params.id);
+        res.redirect('/admin/menu');
+    } catch (err) {
+        console.error(err);
+        res.redirect('/admin/menu');
+    }
 });
 
 module.exports = router;

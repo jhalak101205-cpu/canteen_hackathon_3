@@ -20,7 +20,7 @@
                             <div class="payment-option-icon">📱</div>
                             <div class="payment-option-details">
                                 <span class="payment-option-title">UPI (GPay / PhonePe / Paytm)</span>
-                                <span class="payment-option-desc">Scan QR code or enter UPI ID for instant checkout</span>
+                                <span class="payment-option-desc">Scan QR code and enter transaction ID</span>
                             </div>
                             <input type="radio" class="payment-option-radio" name="pay_radio" checked style="margin-left: auto;">
                         </div>
@@ -40,14 +40,47 @@
                             <div class="payment-option-icon">💵</div>
                             <div class="payment-option-details">
                                 <span class="payment-option-title">Pay at Counter</span>
-                                <span class="payment-option-desc">Order now and pay at canteen delivery counter</span>
+                                <span class="payment-option-desc">Order now and pay at canteen counter</span>
                             </div>
                             <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
                         </div>
                     </div>
 
+                    <!-- UPI QR Box -->
+                    <div id="upiQrBox" style="display: block; margin-top: 24px; padding: 20px; border: 1.5px dashed var(--primary); border-radius: 18px; background: #fff;">
+                        <h3 style="margin-bottom: 12px;">Scan & Pay via UPI</h3>
+
+                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                            <div style="width: 180px; height: 180px; border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white;">
+                                <img 
+                                    src="/images/canteen-qr.png" 
+                                    alt="Canteen UPI QR Code" 
+                                    style="width: 100%; height: 100%; object-fit: contain;"
+                                    onerror="this.style.display='none'; this.parentElement.innerHTML='QR<br>Image<br>Missing';"
+                                >
+                            </div>
+
+                            <div>
+                                <p style="margin-bottom: 8px; color: var(--text-muted);">
+                                    Scan this QR using GPay, PhonePe, Paytm, or any UPI app.
+                                </p>
+
+                                <label style="display: block; font-weight: 700; margin-bottom: 8px;">
+                                    Enter UPI Transaction ID after payment
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="upiTransactionId"
+                                    placeholder="Example: UPI123456789"
+                                    style="padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); width: 260px;"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="checkout-btn" style="margin-top: 30px;">
-                        Pay Now <span id="payButtonAmount">₹180</span> 🚀
+                        I Have Paid <span id="payButtonAmount">₹180</span> ✅
                     </button>
                 </form>
             </div>
@@ -95,12 +128,16 @@
 
         const amount = document.getElementById("finalAmountInput").value;
         const button = document.querySelector(".checkout-btn");
+        const upiQrBox = document.getElementById("upiQrBox");
 
         if (method === "UPI") {
-            button.innerHTML = `Pay Now <span id="payButtonAmount">₹${amount}</span> 🚀`;
+            upiQrBox.style.display = "block";
+            button.innerHTML = `I Have Paid <span id="payButtonAmount">₹${amount}</span> ✅`;
         } else if (method === "PAY_LATER") {
+            upiQrBox.style.display = "none";
             button.innerHTML = `Place Order - Pay Later <span id="payButtonAmount">₹${amount}</span> 🕒`;
         } else if (method === "PAY_AT_COUNTER") {
+            upiQrBox.style.display = "none";
             button.innerHTML = `Place Order <span id="payButtonAmount">₹${amount}</span> 🍽️`;
         }
     }
@@ -123,8 +160,8 @@
 
         if (cart.length > 0) {
             container.innerHTML = cart.map(item => {
-                const quantity = item.qty || item.quantity || 1;
-                const price = item.price || 0;
+                const quantity = Number(item.qty || item.quantity || 1);
+                const price = Number(item.price || 0);
 
                 return `
                     <div style="display: flex; justify-content: space-between; font-size: 14px;">
@@ -141,16 +178,9 @@
             container.innerHTML = `
                 <div style="display: flex; justify-content: space-between; font-size: 14px;">
                     <span style="color: var(--text-muted);">
-                        <strong style="color: var(--primary);">1x</strong> Cheesy Double Burger
+                        No items found in cart
                     </span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹120</span>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);">
-                        <strong style="color: var(--primary);">2x</strong> Cold Coffee Premium
-                    </span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹100</span>
+                    <span style="font-weight: 600; color: var(--primary-dark);">₹0</span>
                 </div>
             `;
         }
@@ -163,30 +193,32 @@
         const selectedMethod = document.getElementById("selectedMethodInput").value;
         const totalAmount = Number(document.getElementById("finalAmountInput").value);
 
-        let finalItems = [];
-
-        if (cart.length > 0) {
-            finalItems = cart.map(item => {
-                return {
-                    name: item.name,
-                    price: Number(item.price),
-                    quantity: Number(item.qty || item.quantity || 1)
-                };
-            });
-        } else {
-            finalItems = [
-                {
-                    name: "Cheesy Double Burger",
-                    price: 120,
-                    quantity: 1
-                },
-                {
-                    name: "Cold Coffee Premium",
-                    price: 50,
-                    quantity: 2
-                }
-            ];
+        if (cart.length === 0) {
+            alert("Your cart is empty. Please add items before placing an order.");
+            window.location.href = "/student/menu";
+            return;
         }
+
+        let upiTransactionId = null;
+
+        if (selectedMethod === "UPI") {
+            upiTransactionId = document.getElementById("upiTransactionId").value.trim();
+
+            if (!upiTransactionId) {
+                alert("Please scan the QR and enter your UPI transaction ID.");
+                return;
+            }
+        }
+
+        const finalItems = cart.map(item => {
+            return {
+                itemId: item.itemId || undefined,
+                name: item.name,
+                price: Number(item.price),
+                image: item.image || "🍽️",
+                quantity: Number(item.qty || item.quantity || 1)
+            };
+        });
 
         const orderData = {
             studentName: "Test Student",
@@ -196,7 +228,7 @@
             items: finalItems,
             totalAmount: totalAmount,
             paymentMethod: selectedMethod,
-            upiTransactionId: selectedMethod === "UPI" ? "UPI_TEST_" + Date.now() : null
+            upiTransactionId: upiTransactionId
         };
 
         try {
@@ -225,140 +257,10 @@
         }
     });
 
-    document.addEventListener("DOMContentLoaded", loadOrderDetails);
+    document.addEventListener("DOMContentLoaded", function () {
+        loadOrderDetails();
+        selectPaymentMethod("UPI", document.querySelector(".payment-option-card.selected"));
+    });
 </script>
 
 <%- include("../partials/footer") %>
-<script>
-    function selectPaymentMethod(method, element) {
-        document.querySelectorAll('.payment-option-card').forEach(card => {
-            card.classList.remove('selected');
-            card.querySelector('.payment-option-radio').checked = false;
-        });
-
-        element.classList.add('selected');
-        element.querySelector('.payment-option-radio').checked = true;
-
-        document.getElementById('selectedMethodInput').value = method;
-
-        const button = document.querySelector(".checkout-btn");
-
-        if (method === "UPI") {
-            button.innerHTML = `Pay Now <span id="payButtonAmount">₹${document.getElementById("finalAmountInput").value}</span> 🚀`;
-        } else if (method === "PAY_LATER") {
-            button.innerHTML = `Place Order - Pay Later <span id="payButtonAmount">₹${document.getElementById("finalAmountInput").value}</span> 🕒`;
-        } else {
-            button.innerHTML = `Place Order <span id="payButtonAmount">₹${document.getElementById("finalAmountInput").value}</span> 🍽️`;
-        }
-    }
-
-    function loadOrderDetails() {
-        const cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
-        const total = localStorage.getItem('canteen_last_total') || '180';
-
-        document.getElementById('sumTotal').innerText = `₹${total}`;
-        document.getElementById('payButtonAmount').innerText = `₹${total}`;
-        document.getElementById('finalAmountInput').value = total;
-
-        const subtotalValue = Math.max(0, parseInt(total) - 20);
-        document.getElementById('sumSubtotal').innerText = `₹${subtotalValue}`;
-        document.getElementById('sumFees').innerText = `₹${parseInt(total) - subtotalValue}`;
-
-        const container = document.getElementById('paymentSummaryContainer');
-
-        if (cart.length > 0) {
-            container.innerHTML = cart.map(item => `
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);">
-                        <strong style="color: var(--primary);">${item.qty}x</strong> ${item.name}
-                    </span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹${item.price * item.qty}</span>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);">
-                        <strong style="color: var(--primary);">1x</strong> Cheesy Double Burger
-                    </span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹120</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);">
-                        <strong style="color: var(--primary);">2x</strong> Cold Coffee Premium
-                    </span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹100</span>
-                </div>
-            `;
-        }
-    }
-
-    document.getElementById('paymentForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
-        const total = Number(document.getElementById('finalAmountInput').value);
-        const selectedMethod = document.getElementById('selectedMethodInput').value;
-
-        let finalItems = [];
-
-        if (cart.length > 0) {
-            finalItems = cart.map(item => ({
-                name: item.name,
-                price: item.price,
-                quantity: item.qty
-            }));
-        } else {
-            finalItems = [
-                {
-                    name: "Cheesy Double Burger",
-                    price: 120,
-                    quantity: 1
-                },
-                {
-                    name: "Cold Coffee Premium",
-                    price: 50,
-                    quantity: 2
-                }
-            ];
-        }
-
-        const orderData = {
-            studentName: "Test Student",
-            studentEmail: "student@test.com",
-            studentPhone: "9876543210",
-            collegeName: "Mirai School of Technology",
-            items: finalItems,
-            totalAmount: total,
-            paymentMethod: selectedMethod,
-            upiTransactionId: selectedMethod === "UPI" ? "UPI_TEST_" + Date.now() : null
-        };
-
-        try {
-            const response = await fetch("/api/payment/create-order", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(orderData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                localStorage.removeItem('canteen_cart');
-                localStorage.removeItem('canteen_last_total');
-
-                alert("Order placed successfully!");
-                window.location.href = "/student/success";
-            } else {
-                alert(result.message || "Something went wrong");
-            }
-        } catch (error) {
-            console.error("Payment error:", error);
-            alert("Failed to place order");
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', loadOrderDetails);
-</script>

@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 
 const StudentMenu = require("../modals/studentMenu");
+const Order = require("../modals/order");
 
-// Browse menu page
-// URL: /student/menu
+// Browse menu
 router.get("/menu", async (req, res) => {
     try {
         const menuItems = await StudentMenu.find({ isAvailable: true });
@@ -17,19 +17,51 @@ router.get("/menu", async (req, res) => {
 });
 
 // Cart page
-// URL: /student/cart
 router.get("/cart", (req, res) => {
     res.render("student/cart");
 });
 
 // Payment page
-// URL: /student/payment
 router.get("/payment", (req, res) => {
     res.render("student/payment");
 });
 
+// Save order in MongoDB
+router.post("/order/place", async (req, res) => {
+    try {
+        const { studentName, phone, items, totalAmount, paymentMethod } = req.body;
+
+        if (!studentName || !phone || !items || items.length === 0 || !totalAmount) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing order details"
+            });
+        }
+
+        const newOrder = await Order.create({
+            studentName,
+            phone,
+            items,
+            totalAmount,
+            paymentMethod
+        });
+
+        res.json({
+            success: true,
+            message: "Order placed successfully",
+            orderId: newOrder._id
+        });
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).json({
+            success: false,
+            message: "Error placing order"
+        });
+    }
+});
+
 // Success page
-// URL: /student/success
 router.get("/success", (req, res) => {
     res.render("student/success");
 });

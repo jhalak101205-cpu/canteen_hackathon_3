@@ -1,198 +1,160 @@
 <%- include("../partials/header") %>
-<%- include("../partials/navbar") %>
+    <%- include("../partials/navbar") %>
 
-<main class="student-layout">
-    <div class="container">
-        <h2 style="margin-bottom: 24px;">Your Cart</h2>
-        
-        <div class="cart-grid">
-            <!-- Left Side: Cart Items -->
-            <div class="cart-items-card">
-                <div class="cart-title-row">
-                    <h3 style="font-size: 20px;">Review items</h3>
-                    <span id="itemCountLabel" style="color: var(--accent); font-weight: 700;">0 Items</span>
-                </div>
-                
-                <div id="cartItemsContainer">
-                    <!-- Dynamic Items will be rendered here. Fallbacks are loaded via JavaScript -->
-                </div>
-                
-                <div id="emptyCartView" style="display: none; text-align: center; padding: 40px 20px;">
-                    <span style="font-size: 64px;">🛒</span>
-                    <h3 style="margin: 16px 0 8px 0;">Your cart is empty</h3>
-                    <p style="color: var(--text-muted); margin-bottom: 24px;">Add some delicious items from our menu to satisfy your hunger.</p>
-                    <!-- Backend route will be added here -->
-                    <a href="" class="success-btn" style="background-color: var(--accent);">Browse Menu</a>
-                </div>
-            </div>
-            
-            <!-- Right Side: Bill Summary -->
-            <div class="bill-summary-card">
-                <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">Bill Details</h3>
-                
-                <div class="bill-row">
-                    <span>Item Total</span>
-                    <span id="billSubtotal">₹0</span>
-                </div>
-                
-                <div class="bill-row">
-                    <span>Canteen Packing Charge</span>
-                    <span>₹10</span>
-                </div>
-                
-                <div class="bill-row">
-                    <span>GST (5%)</span>
-                    <span id="billTax">₹0</span>
-                </div>
-                
-                <div class="bill-row total">
-                    <span>Grand Total</span>
-                    <span id="billGrandTotal">₹0</span>
-                </div>
-                
-                <!-- Backend route will be added here -->
-                <form action="" method="POST" id="checkoutForm">
-                    <input type="hidden" name="cartData" id="cartDataInput">
-                    <input type="hidden" name="grandTotal" id="grandTotalInput">
-                    <button type="submit" class="checkout-btn">
-                        Proceed to Payment 💳
+        <main class="student-layout">
+            <div class="container">
+
+                <h2 style="margin-bottom: 24px;">Your Cart 🛒</h2>
+
+                <div id="cartContainer"></div>
+
+                <div id="cartSummary" style="margin-top: 30px; display: none;">
+                    <h3>Total: ₹<span id="cartTotal">0</span></h3>
+
+                    <button id="clearCartBtn" class="add-btn" style="margin-top: 12px;">
+                        Clear Cart
                     </button>
-                </form>
-                
-                <div style="margin-top: 20px; display: flex; align-items: center; gap: 8px; justify-content: center; font-size: 12px; color: var(--text-muted); font-weight: 500;">
-                    🛡️ Secure Checkout Powered by CanteenExpress
+
+                    <a href="/student/menu" class="checkout-link" style="margin-left: 10px;">
+                        Add More Items
+                    </a>
+
+                    <button class="add-btn" style="margin-left: 10px;">
+                        Place Order
+                    </button>
                 </div>
+
             </div>
-        </div>
-    </div>
-</main>
+        </main>
 
-<!-- Vanilla JS Cart Mechanics -->
-<script>
-    // Mock default items if cart is empty
-    const DEFAULT_CART_MOCK = [
-        { name: "Cheesy Double Burger", price: 120, image: "🍔", qty: 1 },
-        { name: "Cold Coffee Premium", price: 50, image: "☕", qty: 2 }
-    ];
+        <script>
+            function getCart() {
+                return JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+            }
 
-    function getCart() {
-        let cart = JSON.parse(localStorage.getItem('canteen_cart'));
-        // Fallback to mock items so the dashboard is beautiful on launch
-        if (!cart || cart.length === 0) {
-            cart = DEFAULT_CART_MOCK;
-            localStorage.setItem('canteen_cart', JSON.stringify(cart));
-        }
-        return cart;
-    }
+            function saveCart(cart) {
+                localStorage.setItem("canteen_cart", JSON.stringify(cart));
+                renderCart();
+            }
 
-    function saveCart(cart) {
-        localStorage.setItem('canteen_cart', JSON.stringify(cart));
-        renderCart();
-    }
+            function renderCart() {
+                const cart = getCart();
 
-    function updateQuantity(index, increment) {
-        let cart = getCart();
-        cart[index].qty += increment;
-        
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1);
-        }
-        
-        saveCart(cart);
-    }
+                const cartContainer = document.getElementById("cartContainer");
+                const cartSummary = document.getElementById("cartSummary");
+                const cartTotal = document.getElementById("cartTotal");
 
-    function removeItem(index) {
-        let cart = getCart();
-        cart.splice(index, 1);
-        saveCart(cart);
-    }
+                cartContainer.innerHTML = "";
 
-    function renderCart() {
-        const cart = getCart();
-        const container = document.getElementById('cartItemsContainer');
-        const emptyView = document.getElementById('emptyCartView');
-        const countLabel = document.getElementById('itemCountLabel');
-        const grid = document.querySelector('.cart-grid');
-        
-        if (cart.length === 0) {
-            container.innerHTML = '';
-            emptyView.style.display = 'block';
-            countLabel.innerText = '0 Items';
-            document.querySelector('.bill-summary-card').style.display = 'none';
-            // Scale grid to take full width
-            grid.style.gridTemplateColumns = '1fr';
-            return;
-        }
-        
-        grid.style.gridTemplateColumns = ''; // reset grid styles
-        document.querySelector('.bill-summary-card').style.display = 'block';
-        emptyView.style.display = 'none';
-        
-        let subtotal = 0;
-        let totalQty = 0;
-        
-        container.innerHTML = cart.map((item, idx) => {
-            const itemPriceTotal = item.price * item.qty;
-            subtotal += itemPriceTotal;
-            totalQty += item.qty;
-            
-            return `
-                <div class="cart-item">
-                    <div class="flex-center" style="font-size: 32px; width: 64px; height: 64px; background-color: var(--bg-main); border-radius: var(--radius-sm);">
-                        ${item.image || '🍕'}
-                    </div>
-                    
-                    <div class="cart-item-details">
-                        <span class="cart-item-name">${item.name}</span>
-                        <span class="cart-item-meta">₹${item.price} each</span>
-                    </div>
-                    
-                    <div class="qty-selector">
-                        <button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button>
-                        <div class="qty-val">${item.qty}</div>
-                        <button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button>
-                    </div>
-                    
-                    <div class="cart-item-price">
-                        ₹${itemPriceTotal}
-                        
-                        <!-- Backend route will be added here -->
-                        <form action="" method="POST" style="display: inline-block; margin-left: 8px;">
-                            <input type="hidden" name="itemName" value="${item.name}">
-                            <button type="button" class="remove-btn" onclick="removeItem(${idx})" title="Remove Item">
-                                🗑️
+                if (cart.length === 0) {
+                    cartContainer.innerHTML = `
+                <div style="text-align:center; margin-top:40px;">
+                    <h3>Your cart is empty 😭</h3>
+                    <p>Add some tasty items from the menu.</p>
+                    <a href="/student/menu" class="checkout-link">Go to Menu</a>
+                </div>
+            `;
+
+                    cartSummary.style.display = "none";
+                    return;
+                }
+
+                let total = 0;
+
+                cart.forEach((item, index) => {
+                    total += item.price * item.qty;
+
+                    const cartItem = document.createElement("div");
+                    cartItem.className = "food-card";
+                    cartItem.style.marginBottom = "16px";
+
+                    cartItem.innerHTML = `
+                <div class="food-card-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
+
+                        <div style="display:flex; align-items:center; gap:16px;">
+                            <div style="font-size:42px;">
+                                ${item.image}
+                            </div>
+
+                            <div>
+                                <h3 class="food-title">${item.name}</h3>
+                                <p class="food-desc">${item.category || "Canteen Item"}</p>
+                                <div class="food-price">₹${item.price}</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button class="add-btn decrease-btn" data-index="${index}">-</button>
+                            <span style="font-size:18px; font-weight:600;">${item.qty}</span>
+                            <button class="add-btn increase-btn" data-index="${index}">+</button>
+                            <button class="add-btn remove-btn" data-index="${index}" style="background:#ff4d4d; color:white;">
+                                Delete
                             </button>
-                        </form>
+                        </div>
+
                     </div>
                 </div>
             `;
-        }).join('');
-        
-        countLabel.innerText = `${totalQty} Item${totalQty > 1 ? 's' : ''}`;
-        
-        // Calculations
-        const packingCharge = 10;
-        const tax = Math.round(subtotal * 0.05);
-        const grandTotal = subtotal + packingCharge + tax;
-        
-        document.getElementById('billSubtotal').innerText = `₹${subtotal}`;
-        document.getElementById('billTax').innerText = `₹${tax}`;
-        document.getElementById('billGrandTotal').innerText = `₹${grandTotal}`;
-        
-        // Populate inputs for form submission simulation
-        document.getElementById('cartDataInput').value = JSON.stringify(cart);
-        document.getElementById('grandTotalInput').value = grandTotal;
-    }
 
-    // Set form action placeholder listener
-    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-        // Since backend route is empty, we can mock transition or let form submit normally
-        // In real backend, this will submit to /student/payment route. Let's save final amounts to local storage for the payment screen.
-        const total = document.getElementById('billGrandTotal').innerText.replace('₹', '');
-        localStorage.setItem('canteen_last_total', total);
-    });
+                    cartContainer.appendChild(cartItem);
+                });
 
-    document.addEventListener('DOMContentLoaded', renderCart);
-</script>
+                cartTotal.innerText = total;
+                cartSummary.style.display = "block";
 
-<%- include("../partials/footer") %>
+                attachCartButtons();
+            }
+
+            function attachCartButtons() {
+                document.querySelectorAll(".increase-btn").forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const index = this.dataset.index;
+                        let cart = getCart();
+
+                        cart[index].qty += 1;
+
+                        saveCart(cart);
+                    });
+                });
+
+                document.querySelectorAll(".decrease-btn").forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const index = this.dataset.index;
+                        let cart = getCart();
+
+                        cart[index].qty -= 1;
+
+                        if (cart[index].qty <= 0) {
+                            cart.splice(index, 1);
+                        }
+
+                        saveCart(cart);
+                    });
+                });
+
+                document.querySelectorAll(".remove-btn").forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const index = this.dataset.index;
+                        let cart = getCart();
+
+                        cart.splice(index, 1);
+
+                        saveCart(cart);
+                    });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                renderCart();
+
+                const clearCartBtn = document.getElementById("clearCartBtn");
+
+                clearCartBtn.addEventListener("click", () => {
+                    localStorage.removeItem("canteen_cart");
+                    renderCart();
+                });
+            });
+        </script>
+
+        <%- include("../partials/footer") %>

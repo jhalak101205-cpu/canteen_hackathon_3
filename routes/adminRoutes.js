@@ -43,7 +43,7 @@ router.get('/admin/dashboard', isAdmin, async (req, res) => {
     try {
         const totalOrders = await Order.countDocuments();
         const pendingOrders = await Order.countDocuments({
-            status: { $in: ['Preparing', 'Ready'] }
+            status: { $in: ['pending', 'Preparing', 'Ready'] }
         });
         const revenueData = await Order.aggregate([
             { $match: { status: 'Delivered' } },

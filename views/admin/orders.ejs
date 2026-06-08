@@ -33,9 +33,10 @@
                 <div class="admin-order-body">
                     <ul class="admin-order-items">
                         <% order.items.forEach(item => { %>
+                        <% const itemQty = item.qty || item.quantity || 1; %>
                         <li class="admin-order-item">
-                            <span><strong class="item-qty"><%= item.quantity %>x</strong> <%= item.name %></span>
-                            <span>₹<%= item.price * item.quantity %></span>
+                            <span><strong class="item-qty"><%= itemQty %>x</strong> <%= item.name %></span>
+                            <span>₹<%= item.price * itemQty %></span>
                         </li>
                         <% }) %>
                     </ul>

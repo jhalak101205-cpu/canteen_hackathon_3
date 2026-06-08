@@ -1,4 +1,4 @@
-require("dotenv").config();
+gitrequire("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -25,7 +25,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 // View engine setup
-app.set("view engine", "ejs");
+app.set("view engine","ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // Middleware
@@ -73,7 +73,7 @@ app.use("/api/auth", studentAuthRoutes);
 
 // Page routes
 app.use("/auth", authRoutes);
-app.use("/admin", adminRoutes);
+app.use("/", adminRoutes);
 app.use("/student", studentRoutes);
 app.use("/api/payment", paymentRoutes);
 

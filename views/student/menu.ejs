@@ -34,10 +34,10 @@
 
                                                 <% if (item.image && item.image.startsWith("http")) { %>
                                                     <img src="<%= item.image %>" alt="<%= item.itemName %>"
-                                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px;">
+                                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px; <%= !item.isAvailable ? 'filter: grayscale(1); opacity: 0.6;' : '' %>">
                                                     <% } else { %>
                                                         <span
-                                                            style="font-size: 64px; animation: float 6s ease-in-out infinite;">
+                                                            style="font-size: 64px; animation: float 6s ease-in-out infinite; <%= !item.isAvailable ? 'opacity: 0.4;' : '' %>">
                                                             <%= item.image || "🍽️" %>
                                                         </span>
                                                         <% } %>
@@ -59,18 +59,22 @@
                                                         <%= item.price %>
                                                     </div>
 
-                                                    <form action="" method="POST" class="add-to-cart-form">
-                                                        <input type="hidden" name="itemId" value="<%= item._id %>">
-                                                        <input type="hidden" name="itemName"
-                                                            value="<%= item.itemName %>">
-                                                        <input type="hidden" name="price" value="<%= item.price %>">
-                                                        <input type="hidden" name="image"
-                                                            value="<%= item.image || '🍽️' %>">
-                                                        <input type="hidden" name="category"
-                                                            value="<%= item.category %>">
+                                                    <% if (!item.isAvailable) { %>
+                                                        <span style="color: var(--text-muted); font-weight: 700; font-size: 13px; text-transform: uppercase;">Unavailable</span>
+                                                    <% } else if (typeof session === 'undefined' || !session.isAdmin) { %>
+                                                        <form action="" method="POST" class="add-to-cart-form">
+                                                            <input type="hidden" name="itemId" value="<%= item._id %>">
+                                                            <input type="hidden" name="itemName"
+                                                                value="<%= item.itemName %>">
+                                                            <input type="hidden" name="price" value="<%= item.price %>">
+                                                            <input type="hidden" name="image"
+                                                                value="<%= item.image || '🍽️' %>">
+                                                            <input type="hidden" name="category"
+                                                                value="<%= item.category %>">
 
-                                                        <button type="submit" class="add-btn">ADD</button>
-                                                    </form>
+                                                            <button type="submit" class="add-btn">ADD</button>
+                                                        </form>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                 </div>
@@ -82,6 +86,7 @@
         </main>
 
         <!-- Floating Cart Bar -->
+        <% if (typeof session === 'undefined' || !session.isAdmin) { %>
         <div class="checkout-bar-floating" id="floatingCart">
             <div class="checkout-bar-info">
                 <span class="checkout-items" id="cartCountText">0 Items added</span>
@@ -92,6 +97,7 @@
                 View Cart ➡️
             </a>
         </div>
+        <% } %>
 
         <script>
             function getCart() {
@@ -195,7 +201,7 @@
         </script>
 
         <!-- Student OTP Authentication Modal Overlay -->
-        <% if (typeof session==='undefined' || !session.isStudent || !session.studentName) { %>
+        <% if (typeof session === 'undefined' || (!session.isStudent && !session.isAdmin) || (session.isStudent && !session.studentName)) { %>
             <div id="student-auth-overlay" class="auth-overlay">
                 <div class="auth-modal-card">
                     <div class="auth-modal-header">

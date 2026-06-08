@@ -8,6 +8,12 @@
             <p class="auth-subtitle">Manage menu items, track incoming orders, and toggle status</p>
         </div>
         
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="auth-alert error">
+                <%= error %>
+            </div>
+        <% } %>
+        
         <form action="/auth/adminLogin" method="POST">
             <div class="form-group">
                 <label for="email" class="form-label">Admin Email</label>

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const Order = require("../modals/order");
+const Order = require("../modals/OrderSchema");
 const Payment = require("../modals/PaymentSchema");
 
 router.post("/create-order", async (req, res) => {

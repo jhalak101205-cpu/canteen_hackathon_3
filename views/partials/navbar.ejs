@@ -10,7 +10,9 @@
 
         <div class="nav-links">
             <a href="/student/menu" class="nav-link">Menu</a>
-            <a href="/student/cart" class="nav-link">Cart</a>
+            <% if (typeof session === 'undefined' || !session.isAdmin) { %>
+                <a href="/student/cart" class="nav-link">Cart</a>
+            <% } %>
 
             <% if (typeof session !== 'undefined' && session.isStudent) { %>
                 <span class="nav-link" style="color: var(--accent); font-weight: 700;">👋 <%= session.studentName || 'Student' %></span>

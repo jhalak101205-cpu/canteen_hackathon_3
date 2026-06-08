@@ -2,12 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 const StudentMenu = require("../modals/studentMenu");
-const Order = require("../modals/order");
+const Order = require("../modals/OrderSchema");
 
 // Browse menu
 router.get("/menu", async (req, res) => {
     try {
-        const menuItems = await StudentMenu.find({ isAvailable: true });
+        const query = (req.session && req.session.isAdmin) ? {} : { isAvailable: true };
+        const menuItems = await StudentMenu.find(query);
 
         res.render("student/menu", { menuItems });
     } catch (err) {

@@ -28,6 +28,7 @@
         </main>
 
         <script>
+
             function getCart() {
                 return JSON.parse(localStorage.getItem("canteen_cart") || "[]");
             }
@@ -35,6 +36,40 @@
             function saveCart(cart) {
                 localStorage.setItem("canteen_cart", JSON.stringify(cart));
                 renderCart();
+            }
+
+            async function getFoodHealth(item, index) {
+                try {
+                    const response = await fetch("/api/food-health", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            name: item.name,
+                            category: item.category || "Canteen Item"
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    const healthBox = document.getElementById(`health-${index}`);
+
+                    if (!result.success) {
+                        healthBox.innerHTML = "Health info unavailable";
+                        return;
+                    }
+
+                    healthBox.innerHTML = `
+                <p><b>Calories:</b> ${result.data.calories}</p>
+                <p><b>Health Level:</b> ${result.data.healthLevel}</p>
+                <p><b>Reason:</b> ${result.data.reason}</p>
+            `;
+
+                } catch (error) {
+                    const healthBox = document.getElementById(`health-${index}`);
+                    healthBox.innerHTML = "Health info unavailable";
+                }
             }
 
             function renderCart() {
@@ -81,6 +116,10 @@
                                 <h3 class="food-title">${item.name}</h3>
                                 <p class="food-desc">${item.category || "Canteen Item"}</p>
                                 <div class="food-price">₹${item.price}</div>
+
+                                <div id="health-${index}" style="margin-top:10px; font-size:14px;">
+                                    Checking calories and health level...
+                                </div>
                             </div>
                         </div>
 
@@ -98,6 +137,8 @@
             `;
 
                     cartContainer.appendChild(cartItem);
+
+                    getFoodHealth(item, index);
                 });
 
                 cartTotal.innerText = total;
@@ -155,6 +196,7 @@
                     renderCart();
                 });
             });
+
         </script>
 
         <%- include("../partials/footer") %>

@@ -4,7 +4,10 @@ const mongoose = require("mongoose");
 const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
-
+const { GoogleGenAI } = require("@google/genai");
+const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY
+});
 // Passport & sessions
 const session = require("express-session");
 const passport = require("passport");
@@ -81,7 +84,56 @@ app.use("/api/payment", paymentRoutes);
 app.get("/", (req, res) => {
     res.render("home");
 });
+app.post("/api/food-health", async (req, res) => {
+    try {
+        const { name, category } = req.body;
 
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                message: "Food name is required"
+            });
+        }
+
+        const prompt = `
+You are a nutrition assistant for a college canteen app.
+
+Food item: ${name}
+Category: ${category || "Canteen Item"}
+
+Return ONLY valid JSON in this format:
+{
+  "calories": "approx calories per serving",
+  "healthLevel": "Healthy / Moderate / Unhealthy",
+  "reason": "short reason in simple words"
+}
+`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
+            contents: prompt
+        });
+
+        let text = response.text.trim();
+
+        text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+        const result = JSON.parse(text);
+
+        res.json({
+            success: true,
+            data: result
+        });
+
+    } catch (error) {
+        console.log("Gemini food health error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Could not analyze food health"
+        });
+    }
+});
 // Database connection
 mongoose.connect("mongodb://127.0.0.1:27017/canteenApp")
     .then(() => {

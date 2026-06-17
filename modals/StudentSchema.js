@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema({
+    clerkId: {
+        type: String,
+        required: true,
+        unique: true
+    },
+
     name: {
         type: String,
         default: ""
@@ -8,23 +14,7 @@ const studentSchema = new mongoose.Schema({
 
     email: {
         type: String,
-        required: true,
-        unique: true
-    },
-
-    password: {
-        type: String,
-        required: true
-    },
-
-    role: {
-        type: String,
-        default: "student"
-    },
-
-    isVerified: {
-        type: Boolean,
-        default: false
+        default: ""
     },
 
     createdAt: {

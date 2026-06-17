@@ -15,29 +15,26 @@
         
         <!-- Metrics Grid -->
         <div class="admin-metrics">
-            <!-- Total Orders -->
             <div class="metric-card orders">
                 <div class="metric-info">
                     <h3>Total Orders</h3>
-                    <div class="metric-val"><%= totalOrders %></div>
+                    <div class="metric-val" id="metric-total-orders"><%= totalOrders %></div>
                 </div>
                 <div class="metric-icon-box">📦</div>
             </div>
 
-            <!-- Pending Orders -->
             <div class="metric-card pending">
                 <div class="metric-info">
                     <h3>Pending Orders</h3>
-                    <div class="metric-val"><%= pendingOrders %></div>
+                    <div class="metric-val" id="metric-pending-orders"><%= pendingOrders %></div>
                 </div>
                 <div class="metric-icon-box">⏳</div>
             </div>
 
-            <!-- Revenue -->
             <div class="metric-card revenue">
                 <div class="metric-info">
                     <h3>Today's Revenue</h3>
-                    <div class="metric-val">₹<%= revenue.toLocaleString('en-IN') %></div>
+                    <div class="metric-val" id="metric-revenue" data-value="<%= revenue %>">₹<%= revenue.toLocaleString('en-IN') %></div>
                 </div>
                 <div class="metric-icon-box">💰</div>
             </div>
@@ -45,3 +42,111 @@
         
         <!-- Action Pathways Grid -->
         <h3 style="margin-bottom: 20px; font-size: 20px;">Administrative Actions</h3>
+        
+        <div class="admin-actions-grid">
+            <div class="admin-action-card">
+                <div class="admin-action-icon">🧾</div>
+                <h4 class="admin-action-title">Manage Incoming Orders</h4>
+                <p class="admin-action-desc">View active tokens, prepare dishes, update fulfillment tracking, and trigger status updates.</p>
+                <a href="/admin/orders" class="admin-action-btn">
+                    View Live Orders ➔
+                </a>
+            </div>
+
+            <div class="admin-action-card">
+                <div class="admin-action-icon">📋</div>
+                <h4 class="admin-action-title">Manage Canteen Menu</h4>
+                <p class="admin-action-desc">Add new foods, update pricing models, upload descriptions, and toggle item availability details.</p>
+                <a href="/admin/menu" class="admin-action-btn secondary">
+                    Manage Menu ➔
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Load Socket.io Client -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    try {
+        const socket = io();
+
+        const totalOrdersEl = document.getElementById('metric-total-orders');
+        const pendingOrdersEl = document.getElementById('metric-pending-orders');
+        const revenueEl = document.getElementById('metric-revenue');
+
+        // Track local state for tracking status transitions of existing orders
+        const orderStates = {};
+
+        socket.on('new-order', (order) => {
+            console.log('Dashboard new order:', order);
+            
+            // Increment total orders
+            if (totalOrdersEl) {
+                let total = parseInt(totalOrdersEl.innerText) || 0;
+                totalOrdersEl.innerText = total + 1;
+            }
+
+            // Increment pending orders
+            if (pendingOrdersEl) {
+                let pending = parseInt(pendingOrdersEl.innerText) || 0;
+                pendingOrdersEl.innerText = pending + 1;
+            }
+
+            orderStates[order.orderId] = 'pending';
+        });
+
+        socket.on('order-status-updated', (data) => {
+            console.log('Dashboard order status updated:', data);
+            
+            const prevStatus = orderStates[data.orderId] || 'pending';
+            const nextStatus = data.status;
+
+            if (prevStatus === nextStatus) return;
+
+            // If it moved from active/pending to Delivered (Completed)
+            if (nextStatus === 'Delivered' && prevStatus !== 'Delivered') {
+                if (pendingOrdersEl) {
+                    let pending = parseInt(pendingOrdersEl.innerText) || 0;
+                    pendingOrdersEl.innerText = Math.max(0, pending - 1);
+                }
+
+                if (revenueEl) {
+                    let currentRev = parseFloat(revenueEl.getAttribute('data-value')) || 0;
+                    let addedRev = parseFloat(data.totalAmount) || 0;
+                    let newRev = currentRev + addedRev;
+                    revenueEl.setAttribute('data-value', newRev);
+                    revenueEl.innerText = '₹' + newRev.toLocaleString('en-IN');
+                }
+            }
+            // If it moved from active/pending to Cancelled
+            else if (nextStatus === 'Cancelled' && prevStatus !== 'Cancelled' && prevStatus !== 'Delivered') {
+                if (pendingOrdersEl) {
+                    let pending = parseInt(pendingOrdersEl.innerText) || 0;
+                    pendingOrdersEl.innerText = Math.max(0, pending - 1);
+                }
+            }
+            // If it moved from Delivered/Cancelled back to active
+            else if (prevStatus === 'Delivered' && nextStatus !== 'Delivered' && nextStatus !== 'Cancelled') {
+                if (pendingOrdersEl) {
+                    let pending = parseInt(pendingOrdersEl.innerText) || 0;
+                    pendingOrdersEl.innerText = pending + 1;
+                }
+                if (revenueEl) {
+                    let currentRev = parseFloat(revenueEl.getAttribute('data-value')) || 0;
+                    let subtractedRev = parseFloat(data.totalAmount) || 0;
+                    let newRev = Math.max(0, currentRev - subtractedRev);
+                    revenueEl.setAttribute('data-value', newRev);
+                    revenueEl.innerText = '₹' + newRev.toLocaleString('en-IN');
+                }
+            }
+
+            orderStates[data.orderId] = nextStatus;
+        });
+
+    } catch (err) {
+        console.error('Socket.IO dashboard error:', err);
+    }
+</script>
+
+<%- include("../partials/footer") %>

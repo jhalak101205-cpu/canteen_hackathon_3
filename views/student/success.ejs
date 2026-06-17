@@ -38,30 +38,80 @@
             </div>
             
             <!-- Backend route will be added here -->
-            <a href="" class="success-btn">
+            <a href="/menu" class="success-btn">
                 🍽️ Back to Menu
             </a>
         </div>
     </div>
 </main>
 
-<!-- Vanilla JS Success Simulation -->
+<!-- Load Socket.io Client -->
+<script src="/socket.io/socket.io.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Generate a random token number on page load
-        const randomToken = 'T-' + Math.floor(1000 + Math.random() * 9000);
-        document.getElementById('tokenPlaceholder').innerText = randomToken;
+        const urlParams = new URLSearchParams(window.location.search);
+        let token = urlParams.get('token');
+        let orderId = urlParams.get('orderId');
+        let initialStatus = urlParams.get('status') || 'pending';
         
-        // Simple status simulation
+        if (!token) {
+            // Fallback to random if not present
+            token = 'T-' + Math.floor(1000 + Math.random() * 9000);
+        }
+        
+        document.getElementById('tokenPlaceholder').innerText = token;
+        
         const statusEl = document.getElementById('statusPlaceholder');
         const timerEl = document.getElementById('timerPlaceholder');
         
-        // Mock timeline transitions
-        setTimeout(() => {
-            statusEl.innerText = "Food Ready! 😋";
-            statusEl.style.color = "var(--accent)";
-            timerEl.innerText = "Now at the Counter";
-        }, 8000);
+        function updateStatusUI(status) {
+            const lowerStatus = status.toLowerCase();
+            if (lowerStatus === 'pending') {
+                statusEl.innerText = "Pending ⏳";
+                statusEl.style.color = "var(--primary)";
+                timerEl.innerText = "Waiting for canteen confirmation";
+            } else if (lowerStatus === 'preparing') {
+                statusEl.innerText = "Preparing 🍳";
+                statusEl.style.color = "var(--secondary)";
+                timerEl.innerText = "5-10 mins remaining";
+            } else if (lowerStatus === 'ready') {
+                statusEl.innerText = "Food Ready! 😋";
+                statusEl.style.color = "var(--accent)";
+                timerEl.innerText = "Please pick up at counter";
+            } else if (lowerStatus === 'delivered' || lowerStatus === 'completed') {
+                statusEl.innerText = "Delivered! 🎉";
+                statusEl.style.color = "var(--accent)";
+                timerEl.innerText = "Enjoy your meal!";
+            } else if (lowerStatus === 'cancelled') {
+                statusEl.innerText = "Cancelled ❌";
+                statusEl.style.color = "var(--text-muted)";
+                timerEl.innerText = "Order cancelled";
+            } else {
+                statusEl.innerText = status;
+                statusEl.style.color = "var(--primary)";
+                timerEl.innerText = "Checking status...";
+            }
+        }
+        
+        updateStatusUI(initialStatus);
+        
+        // Connect to socket.io
+        try {
+            const socket = io();
+            socket.on('connect', () => {
+                console.log('Connected to server via WebSockets');
+            });
+            
+            // Listen to updates for this specific token
+            socket.on(`order-status-${token}`, (data) => {
+                console.log('Received order status update:', data);
+                if (data && data.status) {
+                    updateStatusUI(data.status);
+                }
+            });
+        } catch (err) {
+            console.error('Socket connection error:', err);
+        }
     });
 </script>
 

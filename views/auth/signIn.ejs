@@ -1,0 +1,41 @@
+<%- include("../partials/header") %>
+<%- include("../partials/navbar") %>
+
+<main class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2 class="auth-title">⚡ Student Login</h2>
+            <p class="auth-subtitle">Verify your email via OTP to continue</p>
+        </div>
+
+        <div id="sign-in" style="display: flex; justify-content: center; width: 100%; min-height: 200px;"></div>
+
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="/sign-up">Sign Up</a></p>
+            <p>Are you an Administrator? <a href="/auth/adminLogin">Admin Login</a></p>
+            <p style="margin-top: 10px;"><a href="/">← Back to Home</a></p>
+        </div>
+    </div>
+</main>
+
+<%- include("../partials/clerkScripts") %>
+<script>
+    function initSignIn() {
+        if (window.Clerk) {
+            window.Clerk.mountSignIn(document.getElementById("sign-in"), {
+                signUpUrl: "/sign-up",
+                fallbackRedirectUrl: "/menu",
+                appearance: {
+                    variables: {
+                        colorPrimary: '#3c0c54',
+                        fontFamily: 'Outfit, sans-serif'
+                    }
+                }
+            });
+        }
+    }
+
+    window.addEventListener("clerk-ready", initSignIn);
+</script>
+
+<%- include("../partials/footer") %>

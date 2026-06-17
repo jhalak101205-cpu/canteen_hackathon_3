@@ -1,0 +1,215 @@
+<%- include("../partials/header") %>
+<%- include("../partials/navbar") %>
+
+<main class="student-layout">
+    <div class="container">
+        
+        <!-- Header -->
+        <div class="admin-orders-header">
+            <div>
+                <h2 style="font-size: 28px;">Canteen Menu</h2>
+                <p style="color: var(--text-muted); font-size: 14px;">Add, edit, delete, or toggle availability of menu items</p>
+            </div>
+            <button class="admin-action-btn" onclick="toggleAddForm()">+ Add New Item</button>
+        </div>
+
+        <!-- Add New Item Form (hidden by default) -->
+        <div id="add-form-container" style="display: none; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px; box-shadow: var(--shadow-sm);">
+            <h3 style="margin-bottom: 20px; font-size: 18px;">New Menu Item</h3>
+            <form action="/admin/menu/add" method="POST">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Item Name</label>
+                        <input type="text" name="itemName" class="form-input" placeholder="e.g. Cheesy Burger" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price (₹)</label>
+                        <input type="number" name="price" class="form-input" placeholder="e.g. 120" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-input" required>
+                            <option value="">Select category</option>
+                            <option value="fastfood">Fast Food</option>
+                            <option value="beverages">Beverages</option>
+                            <option value="snacks">Snacks</option>
+                            <option value="meals">Meals</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Image (emoji or URL)</label>
+                        <input type="text" name="image" class="form-input" placeholder="e.g. 🍔 or https://...">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-input" placeholder="Short description of the item">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                    <button type="submit" class="admin-action-btn">Add Item</button>
+                    <button type="button" onclick="toggleAddForm()" style="padding: 10px 24px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-main); font-weight: 600; cursor: pointer;">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="admin-orders-tabs" style="margin-bottom: 24px; flex-wrap: wrap;">
+            <button class="admin-orders-tab active" onclick="filterCategory('all', this)">All (<%= menuItems.length %>)</button>
+            <button class="admin-orders-tab" onclick="filterCategory('fastfood', this)">Fast Food (<%= menuItems.filter(i => i.category === 'fastfood').length %>)</button>
+            <button class="admin-orders-tab" onclick="filterCategory('beverages', this)">Beverages (<%= menuItems.filter(i => i.category === 'beverages').length %>)</button>
+            <button class="admin-orders-tab" onclick="filterCategory('snacks', this)">Snacks (<%= menuItems.filter(i => i.category === 'snacks').length %>)</button>
+            <button class="admin-orders-tab" onclick="filterCategory('meals', this)">Meals (<%= menuItems.filter(i => i.category === 'meals').length %>)</button>
+        </div>
+
+        <!-- Menu Item Cards -->
+        <div class="admin-order-cards-grid">
+            <% if (menuItems.length === 0) { %>
+                <p style="color: var(--text-muted); font-size: 16px;">No menu items yet. Add one above!</p>
+            <% } %>
+
+            <% menuItems.forEach(item => { %>
+            <div class="admin-order-card" data-category="<%= item.category %>">
+                
+                <!-- Card Header -->
+                <div class="admin-order-header">
+                    <span class="admin-order-token"><%= item.image && item.image.startsWith('http') ? '' : item.image %> <%= item.itemName %></span>
+                    <span class="status-pill <%= item.isAvailable ? 'ready' : 'delivered' %>">
+                        <%= item.isAvailable ? 'Available' : 'Unavailable' %>
+                    </span>
+                </div>
+
+                <!-- Card Body -->
+                <div class="admin-order-body">
+                    <!-- If image is a URL show it -->
+                    <% if (item.image && item.image.startsWith('http')) { %>
+                        <img src="<%= item.image %>" alt="<%= item.itemName %>" style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 12px;">
+                    <% } %>
+
+                    <ul class="admin-order-items">
+                        <li class="admin-order-item">
+                            <span style="color: var(--text-muted); font-size: 13px;"><%= item.description %></span>
+                        </li>
+                    </ul>
+                    <div class="admin-order-total-row">
+                        <span style="color: var(--text-muted); font-size: 13px; text-transform: capitalize;"><%= item.category %></span>
+                        <span>₹<%= item.price %></span>
+                    </div>
+                </div>
+
+                <!-- Edit Form (hidden by default) -->
+                <div id="edit-<%= item._id %>" style="display: none; padding: 16px 20px; border-top: 1px solid var(--border-color); background: var(--bg-main);">
+                    <form action="/admin/menu/<%= item._id %>/edit" method="POST">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 12px;">Item Name</label>
+                                <input type="text" name="itemName" class="form-input" value="<%= item.itemName %>" required style="padding: 10px 12px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 12px;">Price (₹)</label>
+                                <input type="number" name="price" class="form-input" value="<%= item.price %>" required min="0" style="padding: 10px 12px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 12px;">Category</label>
+                                <select name="category" class="form-input" style="padding: 10px 12px; font-size: 13px;">
+                                    <option value="fastfood" <%= item.category === 'fastfood' ? 'selected' : '' %>>Fast Food</option>
+                                    <option value="beverages" <%= item.category === 'beverages' ? 'selected' : '' %>>Beverages</option>
+                                    <option value="snacks" <%= item.category === 'snacks' ? 'selected' : '' %>>Snacks</option>
+                                    <option value="meals" <%= item.category === 'meals' ? 'selected' : '' %>>Meals</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 12px;">Image</label>
+                                <input type="text" name="image" class="form-input" value="<%= item.image %>" style="padding: 10px 12px; font-size: 13px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; grid-column: 1 / -1;">
+                                <label class="form-label" style="font-size: 12px;">Description</label>
+                                <input type="text" name="description" class="form-input" value="<%= item.description %>" style="padding: 10px 12px; font-size: 13px;">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" class="action-btn deliver active" style="flex: 1; padding: 8px;">Save</button>
+                            <button type="button" onclick="toggleEdit('<%= item._id %>')" class="action-btn" style="flex: 1; padding: 8px;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Card Actions -->
+                <div class="admin-order-actions">
+                    <!-- Toggle Availability -->
+                    <button class="action-btn <%= item.isAvailable ? 'ready active' : 'prepare' %>"
+                        onclick="toggleAvailability('<%= item._id %>', this)">
+                        <%= item.isAvailable ? 'Available' : 'Unavailable' %>
+                    </button>
+
+                    <!-- Edit -->
+                    <button class="action-btn ready" onclick="toggleEdit('<%= item._id %>')">
+                        ✏️ Edit
+                    </button>
+
+                    <!-- Delete -->
+                    <form action="/admin/menu/<%= item._id %>/delete" method="POST" onsubmit="return confirm('Delete <%= item.itemName %>?')">
+                        <button type="submit" class="action-btn prepare" style="width: 100%;">
+                            🗑️ Delete
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+            <% }) %>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Toggle add form visibility
+    function toggleAddForm() {
+        const form = document.getElementById('add-form-container');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Toggle edit form per card
+    function toggleEdit(itemId) {
+        const editForm = document.getElementById(`edit-${itemId}`);
+        editForm.style.display = editForm.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Filter by category
+    function filterCategory(category, tabBtn) {
+        document.querySelectorAll('.admin-orders-tab').forEach(tab => tab.classList.remove('active'));
+        tabBtn.classList.add('active');
+
+        document.querySelectorAll('.admin-order-card').forEach(card => {
+            const cat = card.getAttribute('data-category');
+            card.style.display = (category === 'all' || cat === category) ? 'flex' : 'none';
+        });
+    }
+
+    // Toggle availability via fetch
+    async function toggleAvailability(itemId, btnElement) {
+        try {
+            const res = await fetch(`/admin/menu/${itemId}/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const isAvailable = data.isAvailable;
+
+                // Update button
+                btnElement.className = `action-btn ${isAvailable ? 'ready active' : 'prepare'}`;
+                btnElement.innerText = isAvailable ? 'Available' : 'Unavailable';
+
+                // Update status pill
+                const card = btnElement.closest('.admin-order-card');
+                const pill = card.querySelector('.status-pill');
+                pill.className = `status-pill ${isAvailable ? 'ready' : 'delivered'}`;
+                pill.innerText = isAvailable ? 'Available' : 'Unavailable';
+            }
+        } catch (err) {
+            console.error('Toggle error:', err);
+            alert('Failed to update. Try again.');
+        }
+    }
+</script>
+
+<%- include("../partials/footer") %>

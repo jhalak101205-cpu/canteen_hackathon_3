@@ -10,19 +10,19 @@
             </div>
             
             <div class="admin-orders-tabs">
-                <button class="admin-orders-tab active" onclick="filterOrders('all', this)">All (<%= orders.length %>)</button>
-                <button class="admin-orders-tab" onclick="filterOrders('pending', this)">Pending (<%= orders.filter(o => o.status !== 'Delivered').length %>)</button>
-                <button class="admin-orders-tab" onclick="filterOrders('completed', this)">Completed (<%= orders.filter(o => o.status === 'Delivered').length %>)</button>
+                <button class="admin-orders-tab active" onclick="filterOrders('all', this)">All (<span id="count-all"><%= orders.length %></span>)</button>
+                <button class="admin-orders-tab" onclick="filterOrders('pending', this)">Pending (<span id="count-pending"><%= orders.filter(o => o.status !== 'Delivered').length %></span>)</button>
+                <button class="admin-orders-tab" onclick="filterOrders('completed', this)">Completed (<span id="count-completed"><%= orders.filter(o => o.status === 'Delivered').length %></span>)</button>
             </div>
         </div>
 
         <div class="admin-order-cards-grid">
             <% if (orders.length === 0) { %>
-                <p style="color: var(--text-muted); font-size: 16px;">No orders yet.</p>
+                <p style="color: var(--text-muted); font-size: 16px;" id="no-orders-msg">No orders yet.</p>
             <% } %>
 
             <% orders.forEach(order => { %>
-            <div class="admin-order-card" data-status="<%= order.status === 'Delivered' ? 'completed' : 'pending' %>">
+            <div class="admin-order-card" id="card-<%= order._id %>" data-status="<%= order.status === 'Delivered' ? 'completed' : 'pending' %>">
                 <div class="admin-order-header">
                     <span class="admin-order-token">Token #<%= order.token %></span>
                     <span class="status-pill <%= order.status.toLowerCase() %>" id="status-<%= order._id %>">
@@ -33,9 +33,10 @@
                 <div class="admin-order-body">
                     <ul class="admin-order-items">
                         <% order.items.forEach(item => { %>
+                        <% const itemQty = item.qty || item.quantity || 1; %>
                         <li class="admin-order-item">
-                            <span><strong class="item-qty"><%= item.quantity %>x</strong> <%= item.name %></span>
-                            <span>₹<%= item.price * item.quantity %></span>
+                            <span><strong class="item-qty"><%= itemQty %>x</strong> <%= item.name %></span>
+                            <span>₹<%= item.price * itemQty %></span>
                         </li>
                         <% }) %>
                     </ul>
@@ -61,7 +62,61 @@
     </div>
 </main>
 
+<!-- Load Socket.io Client -->
+<script src="/socket.io/socket.io.js"></script>
 <script>
+    function playNotificationSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Play a nice clean chime (two quick notes)
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+            osc1.connect(gainNode);
+            
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.12); // A5
+            osc2.connect(gainNode);
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            gainNode.connect(audioCtx.destination);
+            
+            osc1.start();
+            osc1.stop(audioCtx.currentTime + 0.15);
+            osc2.start(audioCtx.currentTime + 0.12);
+            osc2.stop(audioCtx.currentTime + 0.5);
+        } catch (err) {
+            console.log('AudioContext notification error:', err);
+        }
+    }
+
+    function updateTabCounts() {
+        const cards = document.querySelectorAll('.admin-order-card');
+        let total = cards.length;
+        let pending = 0;
+        let completed = 0;
+        cards.forEach(card => {
+            const status = card.getAttribute('data-status');
+            if (status === 'completed') {
+                completed++;
+            } else {
+                pending++;
+            }
+        });
+        const countAll = document.getElementById('count-all');
+        const countPending = document.getElementById('count-pending');
+        const countCompleted = document.getElementById('count-completed');
+        
+        if (countAll) countAll.innerText = total;
+        if (countPending) countPending.innerText = pending;
+        if (countCompleted) countCompleted.innerText = completed;
+    }
+
     function filterOrders(category, tabBtn) {
         document.querySelectorAll('.admin-orders-tab').forEach(tab => {
             tab.classList.remove('active');
@@ -98,12 +153,16 @@
 
                 // Update status badge
                 const badge = document.getElementById(`status-${orderId}`);
-                badge.className = `status-pill ${status.toLowerCase()}`;
-                badge.innerText = status;
+                if (badge) {
+                    badge.className = `status-pill ${status.toLowerCase()}`;
+                    badge.innerText = status;
+                }
 
                 // Update card's data-status for filter
                 const card = btnElement.closest('.admin-order-card');
                 card.setAttribute('data-status', status === 'Delivered' ? 'completed' : 'pending');
+                
+                updateTabCounts();
             } else {
                 alert('Failed to update status. Try again.');
             }
@@ -111,6 +170,114 @@
             console.error('Status update error:', err);
             alert('Network error. Try again.');
         }
+    }
+
+    // Connect and listen for WebSockets
+    try {
+        const socket = io();
+
+        // Listen for new orders
+        socket.on('new-order', (order) => {
+            console.log('New order received:', order);
+            
+            // Remove "No orders yet" placeholder if exists
+            const noOrdersMsg = document.getElementById('no-orders-msg');
+            if (noOrdersMsg) {
+                noOrdersMsg.remove();
+            }
+
+            const itemsHtml = order.items.map(item => {
+                const qty = item.qty || item.quantity || 1;
+                return `
+                    <li class="admin-order-item">
+                        <span><strong class="item-qty">${qty}x</strong> ${item.name}</span>
+                        <span>₹${item.price * qty}</span>
+                    </li>
+                `;
+            }).join('');
+
+            const newCardHtml = `
+            <div class="admin-order-card" id="card-${order.orderId}" data-status="pending">
+                <div class="admin-order-header">
+                    <span class="admin-order-token">Token #${order.token}</span>
+                    <span class="status-pill ${order.status.toLowerCase()}" id="status-${order.orderId}">
+                        ${order.status}
+                    </span>
+                </div>
+
+                <div class="admin-order-body">
+                    <ul class="admin-order-items">
+                        ${itemsHtml}
+                    </ul>
+                    <div class="admin-order-total-row">
+                        <span>Grand Total</span>
+                        <span>₹${order.totalAmount}</span>
+                    </div>
+                </div>
+
+                <div class="admin-order-actions">
+                    <button class="action-btn prepare ${order.status === 'Preparing' ? 'active' : ''}"
+                        onclick="updateStatus('${order.orderId}', 'Preparing', this)">Preparing</button>
+
+                    <button class="action-btn ready ${order.status === 'Ready' ? 'active' : ''}"
+                        onclick="updateStatus('${order.orderId}', 'Ready', this)">Ready</button>
+
+                    <button class="action-btn deliver ${order.status === 'Delivered' ? 'active' : ''}"
+                        onclick="updateStatus('${order.orderId}', 'Delivered', this)">Delivered</button>
+                </div>
+            </div>
+            `;
+
+            const container = document.querySelector('.admin-order-cards-grid');
+            if (container) {
+                container.insertAdjacentHTML('afterbegin', newCardHtml);
+            }
+
+            // Sync Tab Counts
+            updateTabCounts();
+            
+            // Play notification chime
+            playNotificationSound();
+
+            // Re-apply filter
+            const activeTab = document.querySelector('.admin-orders-tab.active');
+            if (activeTab) {
+                activeTab.click();
+            }
+        });
+
+        // Listen for order status updates from other admins/endpoints
+        socket.on('order-status-updated', (data) => {
+            const card = document.getElementById(`card-${data.orderId}`);
+            if (!card) return;
+
+            const badge = document.getElementById(`status-${data.orderId}`);
+            if (badge) {
+                badge.className = `status-pill ${data.status.toLowerCase()}`;
+                badge.innerText = data.status;
+            }
+
+            card.setAttribute('data-status', data.status === 'Delivered' ? 'completed' : 'pending');
+
+            const actionContainer = card.querySelector('.admin-order-actions');
+            if (actionContainer) {
+                actionContainer.querySelectorAll('.action-btn').forEach(btn => {
+                    const isMatch = (data.status === 'Preparing' && btn.classList.contains('prepare')) ||
+                                    (data.status === 'Ready' && btn.classList.contains('ready')) ||
+                                    (data.status === 'Delivered' && btn.classList.contains('deliver'));
+                    if (isMatch) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            updateTabCounts();
+        });
+
+    } catch (err) {
+        console.error('Socket.IO init error:', err);
     }
 </script>
 

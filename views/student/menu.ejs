@@ -23,7 +23,7 @@
 
                             <% menuItems.forEach(item=> { %>
 
-                                <div class="food-card" data-category="<%= item.category %>">
+                                <div class="food-card" id="item-card-<%= item._id %>" data-id="<%= item._id %>" data-category="<%= item.category %>" data-name="<%= item.itemName %>" data-price="<%= item.price %>" data-image="<%= item.image || '🍽️' %>" data-bestseller="<%= item.isBestseller ? 'true' : 'false' %>" data-desc="<%= item.description || '' %>">
 
                                     <% if (item.isBestseller) { %>
                                         <span class="food-badge">Bestseller</span>
@@ -34,10 +34,10 @@
 
                                                 <% if (item.image && item.image.startsWith("http")) { %>
                                                     <img src="<%= item.image %>" alt="<%= item.itemName %>"
-                                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px;">
+                                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px; <%= !item.isAvailable ? 'filter: grayscale(1); opacity: 0.6;' : '' %>">
                                                     <% } else { %>
                                                         <span
-                                                            style="font-size: 64px; animation: float 6s ease-in-out infinite;">
+                                                            style="font-size: 64px; animation: float 6s ease-in-out infinite; <%= !item.isAvailable ? 'opacity: 0.4;' : '' %>">
                                                             <%= item.image || "🍽️" %>
                                                         </span>
                                                         <% } %>
@@ -59,18 +59,22 @@
                                                         <%= item.price %>
                                                     </div>
 
-                                                    <form action="" method="POST" class="add-to-cart-form">
-                                                        <input type="hidden" name="itemId" value="<%= item._id %>">
-                                                        <input type="hidden" name="itemName"
-                                                            value="<%= item.itemName %>">
-                                                        <input type="hidden" name="price" value="<%= item.price %>">
-                                                        <input type="hidden" name="image"
-                                                            value="<%= item.image || '🍽️' %>">
-                                                        <input type="hidden" name="category"
-                                                            value="<%= item.category %>">
+                                                    <% if (!item.isAvailable) { %>
+                                                        <span style="color: var(--text-muted); font-weight: 700; font-size: 13px; text-transform: uppercase;">Unavailable</span>
+                                                    <% } else if (typeof session === 'undefined' || !session.isAdmin) { %>
+                                                        <form action="" method="POST" class="add-to-cart-form">
+                                                            <input type="hidden" name="itemId" value="<%= item._id %>">
+                                                            <input type="hidden" name="itemName"
+                                                                value="<%= item.itemName %>">
+                                                            <input type="hidden" name="price" value="<%= item.price %>">
+                                                            <input type="hidden" name="image"
+                                                                value="<%= item.image || '🍽️' %>">
+                                                            <input type="hidden" name="category"
+                                                                value="<%= item.category %>">
 
-                                                        <button type="submit" class="add-btn">ADD</button>
-                                                    </form>
+                                                            <button type="submit" class="add-btn">ADD</button>
+                                                        </form>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                 </div>
@@ -82,6 +86,7 @@
         </main>
 
         <!-- Floating Cart Bar -->
+        <% if (typeof session === 'undefined' || !session.isAdmin) { %>
         <div class="checkout-bar-floating" id="floatingCart">
             <div class="checkout-bar-info">
                 <span class="checkout-items" id="cartCountText">0 Items added</span>
@@ -92,7 +97,10 @@
                 View Cart ➡️
             </a>
         </div>
+        <% } %>
 
+        <!-- Load Socket.io Client -->
+        <script src="/socket.io/socket.io.js"></script>
         <script>
             function getCart() {
                 return JSON.parse(localStorage.getItem("canteen_cart") || "[]");
@@ -124,15 +132,20 @@
                 }
             }
 
-            document.querySelectorAll(".add-to-cart-form").forEach(form => {
-                form.addEventListener("submit", function (e) {
+            // Use Event Delegation for form submissions to support dynamically added cards
+            const gridContainer = document.querySelector(".grid-menu");
+            if (gridContainer) {
+                gridContainer.addEventListener("submit", function (e) {
+                    const form = e.target.closest(".add-to-cart-form");
+                    if (!form) return;
+                    
                     e.preventDefault();
 
-                    const itemId = this.querySelector('input[name="itemId"]').value;
-                    const name = this.querySelector('input[name="itemName"]').value;
-                    const price = Number(this.querySelector('input[name="price"]').value);
-                    const image = this.querySelector('input[name="image"]').value;
-                    const category = this.querySelector('input[name="category"]').value;
+                    const itemId = form.querySelector('input[name="itemId"]').value;
+                    const name = form.querySelector('input[name="itemName"]').value;
+                    const price = Number(form.querySelector('input[name="price"]').value);
+                    const image = form.querySelector('input[name="image"]').value;
+                    const category = form.querySelector('input[name="category"]').value;
 
                     let cart = getCart();
 
@@ -153,7 +166,7 @@
 
                     saveCart(cart);
 
-                    const btn = this.querySelector(".add-btn");
+                    const btn = form.querySelector(".add-btn");
                     const originalText = btn.innerText;
 
                     btn.innerText = "ADDED ✓";
@@ -166,11 +179,10 @@
                         btn.style.color = "";
                     }, 1000);
                 });
-            });
+            }
 
             // Category filter
             const categoryButtons = document.querySelectorAll(".category-pill");
-            const foodCards = document.querySelectorAll(".food-card");
 
             categoryButtons.forEach(button => {
                 button.addEventListener("click", () => {
@@ -179,7 +191,7 @@
                     categoryButtons.forEach(btn => btn.classList.remove("active"));
                     button.classList.add("active");
 
-                    foodCards.forEach(card => {
+                    document.querySelectorAll(".food-card").forEach(card => {
                         const cardCategory = card.dataset.category;
 
                         if (selectedCategory === "all" || cardCategory === selectedCategory) {
@@ -191,67 +203,199 @@
                 });
             });
 
+            // WebSocket connection and real-time updates
+            try {
+                const socket = io();
+
+                // Listen to menu item availability toggles
+                socket.on("menu-item-availability", (data) => {
+                    const card = document.getElementById(`item-card-${data.itemId}`);
+                    if (!card) return;
+
+                    const footer = card.querySelector(".food-card-footer");
+                    const imageWrapper = card.querySelector(".food-image-wrapper");
+                    const img = imageWrapper.querySelector("img");
+                    const emoji = imageWrapper.querySelector("span");
+
+                    if (data.isAvailable) {
+                        if (img) {
+                            img.style.filter = "";
+                            img.style.opacity = "";
+                        }
+                        if (emoji) {
+                            emoji.style.opacity = "";
+                        }
+                        const name = card.dataset.name;
+                        const price = card.dataset.price;
+                        const image = card.dataset.image;
+                        const category = card.dataset.category;
+
+                        footer.innerHTML = `
+                            <div class="food-price"><span>₹</span>${price}</div>
+                            <form action="" method="POST" class="add-to-cart-form">
+                                <input type="hidden" name="itemId" value="${data.itemId}">
+                                <input type="hidden" name="itemName" value="${name}">
+                                <input type="hidden" name="price" value="${price}">
+                                <input type="hidden" name="image" value="${image}">
+                                <input type="hidden" name="category" value="${category}">
+                                <button type="submit" class="add-btn">ADD</button>
+                            </form>
+                        `;
+                    } else {
+                        if (img) {
+                            img.style.filter = "grayscale(1)";
+                            img.style.opacity = "0.6";
+                        }
+                        if (emoji) {
+                            emoji.style.opacity = "0.4";
+                        }
+                        const price = card.dataset.price;
+                        footer.innerHTML = `
+                            <div class="food-price"><span>₹</span>${price}</div>
+                            <span class="unavailable-label" style="color: var(--text-muted); font-weight: 700; font-size: 13px; text-transform: uppercase;">Unavailable</span>
+                        `;
+                    }
+                });
+
+                // Listen to menu item additions
+                socket.on("menu-item-added", (item) => {
+                    if (document.getElementById(`item-card-${item._id}`)) return;
+
+                    const grid = document.querySelector(".grid-menu");
+                    const noItemsMsg = grid.querySelector("p");
+                    if (noItemsMsg && noItemsMsg.innerText.includes("No menu items")) {
+                        noItemsMsg.remove();
+                    }
+
+                    const card = document.createElement("div");
+                    card.className = "food-card";
+                    card.id = `item-card-${item._id}`;
+                    card.dataset.id = item._id;
+                    card.dataset.category = item.category;
+                    card.dataset.name = item.itemName;
+                    card.dataset.price = item.price;
+                    card.dataset.image = item.image || "🍽️";
+                    card.dataset.bestseller = item.isBestseller ? "true" : "false";
+                    card.dataset.desc = item.description || "";
+
+                    const activeFilter = document.querySelector(".category-pill.active").dataset.category;
+                    if (activeFilter !== "all" && activeFilter !== item.category) {
+                        card.style.display = "none";
+                    }
+
+                    let imageHtml = "";
+                    if (item.image && item.image.startsWith("http")) {
+                        imageHtml = `<img src="${item.image}" alt="${item.itemName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px;">`;
+                    } else {
+                        imageHtml = `<span style="font-size: 64px; animation: float 6s ease-in-out infinite;">${item.image || '🍽️'}</span>`;
+                    }
+
+                    const bestsellerHtml = item.isBestseller ? `<span class="food-badge">Bestseller</span>` : "";
+
+                    card.innerHTML = `
+                        ${bestsellerHtml}
+                        <div class="food-image-wrapper flex-center" style="background: linear-gradient(135deg, #ffe0b2 0%, #ffb74d 100%);">
+                            ${imageHtml}
+                        </div>
+                        <div class="food-card-content">
+                            <h3 class="food-title">${item.itemName}</h3>
+                            <p class="food-desc">${item.description || 'Fresh and tasty canteen item.'}</p>
+                            <div class="food-card-footer">
+                                <div class="food-price"><span>₹</span>${item.price}</div>
+                                <form action="" method="POST" class="add-to-cart-form">
+                                    <input type="hidden" name="itemId" value="${item._id}">
+                                    <input type="hidden" name="itemName" value="${item.itemName}">
+                                    <input type="hidden" name="price" value="${item.price}">
+                                    <input type="hidden" name="image" value="${item.image || '🍽️'}">
+                                    <input type="hidden" name="category" value="${item.category}">
+                                    <button type="submit" class="add-btn">ADD</button>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                // Listen to menu item deletions
+                socket.on("menu-item-deleted", (itemId) => {
+                    const card = document.getElementById(`item-card-${itemId}`);
+                    if (card) {
+                        card.remove();
+                    }
+                    const grid = document.querySelector(".grid-menu");
+                    if (grid && grid.querySelectorAll(".food-card").length === 0) {
+                        grid.innerHTML = "<p>No menu items available right now.</p>";
+                    }
+                });
+
+                // Listen to menu item updates
+                socket.on("menu-item-updated", (item) => {
+                    const card = document.getElementById(`item-card-${item._id}`);
+                    if (!card) return;
+
+                    card.dataset.category = item.category;
+                    card.dataset.name = item.itemName;
+                    card.dataset.price = item.price;
+                    card.dataset.image = item.image || "🍽️";
+                    card.dataset.bestseller = item.isBestseller ? "true" : "false";
+                    card.dataset.desc = item.description || "";
+
+                    const activeFilter = document.querySelector(".category-pill.active").dataset.category;
+                    if (activeFilter !== "all" && activeFilter !== item.category) {
+                        card.style.display = "none";
+                    } else {
+                        card.style.display = "block";
+                    }
+
+                    let badge = card.querySelector(".food-badge");
+                    if (item.isBestseller) {
+                        if (!badge) {
+                            badge = document.createElement("span");
+                            badge.className = "food-badge";
+                            badge.innerText = "Bestseller";
+                            card.insertBefore(badge, card.firstChild);
+                        }
+                    } else {
+                        if (badge) badge.remove();
+                    }
+
+                    const imageWrapper = card.querySelector(".food-image-wrapper");
+                    if (item.image && item.image.startsWith("http")) {
+                        imageWrapper.innerHTML = `<img src="${item.image}" alt="${item.itemName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px; ${!item.isAvailable ? 'filter: grayscale(1); opacity: 0.6;' : ''}">`;
+                    } else {
+                        imageWrapper.innerHTML = `<span style="font-size: 64px; animation: float 6s ease-in-out infinite; ${!item.isAvailable ? 'opacity: 0.4;' : ''}">${item.image || '🍽️'}</span>`;
+                    }
+
+                    card.querySelector(".food-title").innerText = item.itemName;
+                    card.querySelector(".food-desc").innerText = item.description || "Fresh and tasty canteen item.";
+
+                    const footer = card.querySelector(".food-card-footer");
+                    if (item.isAvailable) {
+                        footer.innerHTML = `
+                            <div class="food-price"><span>₹</span>${item.price}</div>
+                            <form action="" method="POST" class="add-to-cart-form">
+                                <input type="hidden" name="itemId" value="${item._id}">
+                                <input type="hidden" name="itemName" value="${item.itemName}">
+                                <input type="hidden" name="price" value="${item.price}">
+                                <input type="hidden" name="image" value="${item.image || '🍽️'}">
+                                <input type="hidden" name="category" value="${item.category}">
+                                <button type="submit" class="add-btn">ADD</button>
+                            </form>
+                        `;
+                    } else {
+                        footer.innerHTML = `
+                            <div class="food-price"><span>₹</span>${item.price}</div>
+                            <span class="unavailable-label" style="color: var(--text-muted); font-weight: 700; font-size: 13px; text-transform: uppercase;">Unavailable</span>
+                        `;
+                    }
+                });
+
+            } catch (err) {
+                console.error("Socket error on menu page:", err);
+            }
+
             document.addEventListener("DOMContentLoaded", updateFloatingBar);
         </script>
 
-        <!-- Student OTP Authentication Modal Overlay -->
-        <% if (typeof session==='undefined' || !session.isStudent || !session.studentName) { %>
-            <div id="student-auth-overlay" class="auth-overlay">
-                <div class="auth-modal-card">
-                    <div class="auth-modal-header">
-                        <h3 class="auth-modal-title">⚡ Student Login / Register</h3>
-                        <p class="auth-modal-subtitle">Enter your email — new users are registered automatically</p>
-                    </div>
 
-                    <div class="auth-modal-body">
-                        <!-- Alert message container -->
-                        <div id="auth-alert" class="auth-alert" style="display: none;"></div>
-
-                        <!-- Step 1: Email Input Section -->
-                        <div id="auth-step-email" class="auth-step"
-                            style="<%= (typeof session !== 'undefined' && session.isStudent) ? 'display: none;' : '' %>">
-                            <div class="form-group">
-                                <label for="auth-email" class="form-label">Student Email Address</label>
-                                <input type="email" id="auth-email" class="form-input"
-                                    placeholder="Enter student email (e.g. name@college.edu)" required>
-                            </div>
-                            <button type="button" id="btn-send-otp" class="auth-btn student">
-                                Continue →
-                            </button>
-                        </div>
-
-                        <!-- Step 2: OTP Input Section -->
-                        <div id="auth-step-otp" class="auth-step" style="display: none;">
-                            <div class="form-group">
-                                <label for="auth-otp" class="form-label">Password / PIN</label>
-                                <input type="text" id="auth-otp" class="form-input" placeholder="Enter password (default: 123456)"
-                                    maxLength="6" required>
-                            </div>
-                            <div class="auth-modal-resend">
-                                Wrong email? <button type="button" id="btn-resend-otp"
-                                    class="resend-link">Go Back</button>
-                            </div>
-                            <button type="button" id="btn-verify-otp" class="auth-btn student">
-                                Login / Register ✓
-                            </button>
-                        </div>
-
-                        <!-- Step 3: Name Input Section -->
-                        <div id="auth-step-name" class="auth-step"
-                            style=" <%= (typeof session !== 'undefined' && session.isStudent && !session.studentName) ? 'display: flex;' : 'display: none;' %>">
-                            <div class="form-group">
-                                <label for="auth-name" class="form-label">Your Full Name</label>
-                                <input type="text" id="auth-name" class="form-input" placeholder="Enter your full name"
-                                    required>
-                            </div>
-                            <button type="button" id="btn-save-name" class="auth-btn student">
-                                Continue to Menu ➔
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <script src="/js/studentAuth.js" defer></script>
-            <% } %>
-
-                <%- include("../partials/footer") %>
+        <%- include("../partials/footer") %>

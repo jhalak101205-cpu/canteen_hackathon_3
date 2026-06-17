@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 router.get("/studentLogin", (req, res) => {
-  res.render("auth/studentLogin");
+  res.redirect("/sign-in");
 });
 
 router.get("/adminLogin", (req, res) => {

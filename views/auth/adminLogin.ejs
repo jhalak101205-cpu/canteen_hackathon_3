@@ -8,6 +8,12 @@
             <p class="auth-subtitle">Manage menu items, track incoming orders, and toggle status</p>
         </div>
         
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="auth-alert error">
+                <%= error %>
+            </div>
+        <% } %>
+        
         <form action="/auth/adminLogin" method="POST">
             <div class="form-group">
                 <label for="email" class="form-label">Admin Email</label>
@@ -39,7 +45,7 @@
         </form>
         
         <div class="auth-footer">
-            <p>Looking for the student portal? <a href="/auth/studentLogin" style="color: var(--accent);">Student Login</a></p>
+            <p>Looking for the student portal? <a href="/sign-in" style="color: var(--accent);">Student Login</a></p>
             <p style="margin-top: 10px;"><a href="/">Back to Home</a></p>
         </div>
     </div>

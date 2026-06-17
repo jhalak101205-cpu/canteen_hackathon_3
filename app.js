@@ -121,10 +121,6 @@ async function syncStudent(req) {
     }
 }
 
-// ─────────────────────────────────────
-// PUBLIC ROUTES
-// ─────────────────────────────────────
-
 // Home page
 app.get("/", (req, res) => {
     res.render("home");

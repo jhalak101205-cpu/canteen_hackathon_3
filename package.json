@@ -22,9 +22,10 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "mongoose": "^9.6.3",
-    "nodemailer": "^8.0.10",
+    "nodemailer": "^9.0.3",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
+    "razorpay": "^2.9.8",
     "socket.io": "^4.8.3"
   }
 }

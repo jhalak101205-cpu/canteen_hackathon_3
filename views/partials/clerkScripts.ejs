@@ -2,22 +2,11 @@
   (function() {
     var pk = "<%= clerkPublishableKey %>";
     if (!pk || pk === "your_publishable_key_here") {
-      console.warn("Clerk: No valid publishable key set. Auth components will not load.");
+      console.warn("Clerk: No valid publishable key set.");
       return;
     }
 
-    // Decode the FAPI domain from the publishable key
-    // pk_test_<base64(domain + $)> → extract domain for CDN URL
-    var encoded = pk.replace("pk_test_", "").replace("pk_live_", "");
-    try {
-      var decoded = atob(encoded);
-      var fapiDomain = decoded.replace(/\$$/, ""); // remove trailing $
-    } catch(e) {
-      console.error("Clerk: Could not decode publishable key");
-      return;
-    }
-
-    var scriptUrl = "https://" + fapiDomain + "/npm/@clerk/clerk-js@latest/dist/clerk.browser.js";
+    var scriptUrl = "https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js";
 
     var script = document.createElement("script");
     script.src = scriptUrl;
@@ -27,8 +16,11 @@
 
     script.addEventListener("load", function() {
       if (window.Clerk) {
-        window.Clerk.load().then(function() {
+        window.Clerk.load({
+          publishableKey: pk
+        }).then(function() {
           console.log("Clerk initialized successfully");
+          window.clerkReady = true;
           window.dispatchEvent(new Event("clerk-ready"));
         }).catch(function(err) {
           console.error("Clerk load error:", err);
@@ -36,8 +28,8 @@
       }
     });
 
-    script.addEventListener("error", function() {
-      console.error("Failed to load Clerk script from:", scriptUrl);
+    script.addEventListener("error", function(err) {
+      console.error("Failed to load Clerk script from CDN:", err);
     });
 
     document.head.appendChild(script);

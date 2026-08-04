@@ -10,13 +10,11 @@
 
         <div class="nav-links">
             <a href="/menu" class="nav-link">Menu</a>
-            <% if (typeof session === 'undefined' || !session.isAdmin) { %>
-                <a href="/cart" class="nav-link">Cart</a>
-            <% } %>
+            <a href="/cart" class="nav-link">Cart</a>
 
             <% if (typeof session !== 'undefined' && session.isStudent) { %>
                 <span class="nav-link" style="color: var(--accent); font-weight: 700;">👋 <%= session.studentName || 'Student' %></span>
-                <a href="/logout" class="nav-link">Logout</a>
+                <a href="/logout" onclick="handleStudentLogout(event)" class="nav-link">Logout</a>
             <% } else if (typeof session !== 'undefined' && session.isAdmin) { %>
                 <a href="/admin/dashboard" class="nav-link">Admin Dashboard</a>
                 <a href="/admin/logout" class="nav-link">Logout</a>
@@ -27,3 +25,16 @@
         </div>
     </div>
 </nav>
+
+<script>
+function handleStudentLogout(e) {
+    if (window.Clerk && typeof window.Clerk.signOut === 'function') {
+        e.preventDefault();
+        window.Clerk.signOut().then(function() {
+            window.location.href = '/logout';
+        }).catch(function() {
+            window.location.href = '/logout';
+        });
+    }
+}
+</script>

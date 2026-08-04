@@ -121,6 +121,43 @@ async function syncStudent(req) {
     }
 }
 
+// ─────────────────────────────────────
+// AUTHENTICATION MIDDLEWARE
+// ─────────────────────────────────────
+async function requireStudentAuth(req, res, next) {
+    try {
+        let authData = null;
+        try {
+            authData = getAuth(req);
+        } catch (e) {
+            authData = null;
+        }
+
+        const userId = authData ? authData.userId : null;
+
+        if (userId) {
+            await syncStudent(req);
+            return next();
+        }
+
+        if (req.session && req.session.isStudent) {
+            return next();
+        }
+
+        if (!res.headersSent) {
+            return res.redirect("/sign-in");
+        }
+    } catch (err) {
+        console.error("Auth middleware error:", err);
+        if (req.session && req.session.isStudent) {
+            return next();
+        }
+        if (!res.headersSent) {
+            return res.redirect("/sign-in");
+        }
+    }
+}
+
 // Home page
 app.get("/", (req, res) => {
     res.render("home");
@@ -135,11 +172,14 @@ app.get("/sign-up", (req, res) => {
     res.render("auth/signUp");
 });
 
-// Logout — destroy local session, Clerk handles its own token on the client
+// Logout — destroy local session & clear cookies
 app.get("/logout", (req, res) => {
     req.session.destroy(() => {
         res.clearCookie("connect.sid");
-        res.redirect("/");
+        res.clearCookie("__session");
+        if (!res.headersSent) {
+            res.redirect("/");
+        }
     });
 });
 
@@ -147,44 +187,60 @@ app.get("/logout", (req, res) => {
 // PROTECTED STUDENT ROUTES
 // ─────────────────────────────────────
 
-app.get("/menu", requireAuth({ signInUrl: "/sign-in" }), async (req, res) => {
+app.get("/menu", requireStudentAuth, async (req, res) => {
     try {
         await syncStudent(req);
         const menuItems = await StudentMenu.find({ isAvailable: true });
-        res.render("student/menu", { menuItems });
+        if (!res.headersSent) {
+            res.render("student/menu", { menuItems });
+        }
     } catch (err) {
         console.error("Menu error:", err);
-        res.status(500).send("Error loading menu");
+        if (!res.headersSent) {
+            res.status(500).send("Error loading menu");
+        }
     }
 });
 
-app.get("/cart", requireAuth({ signInUrl: "/sign-in" }), async (req, res) => {
+app.get("/cart", requireStudentAuth, async (req, res) => {
     try {
         await syncStudent(req);
-        res.render("student/cart");
+        if (!res.headersSent) {
+            res.render("student/cart");
+        }
     } catch (err) {
         console.error("Cart error:", err);
-        res.status(500).send("Error loading cart");
+        if (!res.headersSent) {
+            res.status(500).send("Error loading cart");
+        }
     }
 });
 
-app.get("/payment", requireAuth({ signInUrl: "/sign-in" }), async (req, res) => {
+app.get("/payment", requireStudentAuth, async (req, res) => {
     try {
         await syncStudent(req);
-        res.render("student/payment");
+        if (!res.headersSent) {
+            res.render("student/payment");
+        }
     } catch (err) {
         console.error("Payment error:", err);
-        res.status(500).send("Error loading payment");
+        if (!res.headersSent) {
+            res.status(500).send("Error loading payment");
+        }
     }
 });
 
-app.get("/success", requireAuth({ signInUrl: "/sign-in" }), async (req, res) => {
+app.get("/success", requireStudentAuth, async (req, res) => {
     try {
         await syncStudent(req);
-        res.render("student/success");
+        if (!res.headersSent) {
+            res.render("student/success");
+        }
     } catch (err) {
         console.error("Success error:", err);
-        res.status(500).send("Error loading success page");
+        if (!res.headersSent) {
+            res.status(500).send("Error loading success page");
+        }
     }
 });
 
@@ -228,6 +284,10 @@ Return ONLY valid JSON in this format:
         res.status(500).json({ success: false, message: "Could not analyze food health" });
     }
 });
+// ─────────────────────────────────────
+// Razorpay Routers
+// ─────────────────────────────────────
+
 
 // ─────────────────────────────────────
 // MOUNTED ROUTERS
@@ -260,9 +320,40 @@ io.on("connection", (socket) => {
 });
 
 // ─────────────────────────────────────
+// GLOBAL ERROR HANDLING & PROCESS SAFETY
+// ─────────────────────────────────────
+process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception thrown:", err);
+});
+
+// Global Express Error Middleware
+app.use((err, req, res, next) => {
+    console.error("Global Express Error:", err.stack || err);
+    res.status(500).render("home", { error: "Something went wrong! Please try again." });
+});
+
+// ─────────────────────────────────────
 // START SERVER
 // ─────────────────────────────────────
-const port = 3000;
+const port = 4000;
+
+server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+        console.error(`Port ${port} is currently in use. Retrying in 1 second...`);
+        setTimeout(() => {
+            server.close();
+            server.listen(port);
+        }, 1000);
+    } else {
+        console.error("Server error:", err);
+    }
+});
+
 server.listen(port, () => {
     console.log(`Canteen Express server running at http://localhost:${port}`);
 });
+// Fixed blank white space on sign-in and sign-up cards

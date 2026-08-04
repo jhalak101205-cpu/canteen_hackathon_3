@@ -658,23 +658,27 @@ footer {
   position: fixed;
   bottom: 24px;
   left: 50%;
-  transform: translateX(-50%) translateY(100px);
+  transform: translateX(-50%) translateY(120px);
   width: 90%;
   max-width: 600px;
   background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
-  color: var(--bg-card);
+  color: #ffffff;
   padding: 16px 24px;
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px rgba(12, 131, 31, 0.35);
+  box-shadow: 0 10px 30px rgba(12, 131, 31, 0.4);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 99;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
 }
 
 .checkout-bar-floating.show {
   transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .checkout-bar-info {

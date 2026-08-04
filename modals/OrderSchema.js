@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
 
     paymentMethod: {
         type: String,
-        enum: ["cash", "upi", "UPI", "PAY_LATER", "PAY_AT_COUNTER"],
+        enum: ["cash", "upi", "UPI", "PAY_LATER", "PAY_AT_COUNTER", "razorpay", "RAZORPAY"],
         default: "cash"
     },
 
@@ -38,7 +38,7 @@ const orderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-generate token and sync phone & quantity fields before saving
-orderSchema.pre('save', async function (next) {
+orderSchema.pre('save', function () {
     // 1. Generate token if not present
     if (!this.token) {
         const random = Math.floor(1000 + Math.random() * 9000);
@@ -62,8 +62,10 @@ orderSchema.pre('save', async function (next) {
             }
         });
     }
-
-    next();
 });
 
-module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);
+if (mongoose.models.Order) {
+    delete mongoose.models.Order;
+}
+
+module.exports = mongoose.model('Order', orderSchema);

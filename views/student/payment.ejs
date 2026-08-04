@@ -1,266 +1,791 @@
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <%- include("../partials/header") %>
-<%- include("../partials/navbar") %>
+    <%- include("../partials/navbar") %>
 
-<main class="student-layout">
-    <div class="container">
-        <h2 style="margin-bottom: 24px;">Checkout Payment</h2>
+        <main class="student-layout">
+            <div class="container">
+                <h2 style="margin-bottom: 24px;">Checkout Payment</h2>
 
-        <div class="payment-grid">
-            <!-- Left Side: Select Payment Method -->
-            <div>
-                <h3 style="font-size: 18px; margin-bottom: 16px;">Choose Payment Method</h3>
+                <div class="payment-grid">
+                    <!-- Left Side: Select Payment Method -->
+                    <div>
+                        <h3 style="font-size: 18px; margin-bottom: 16px;">Choose Payment Method</h3>
 
-                <form id="paymentForm">
-                    <input type="hidden" name="selectedMethod" id="selectedMethodInput" value="UPI">
-                    <input type="hidden" name="finalAmount" id="finalAmountInput" value="180">
+                        <form id="paymentForm">
+                            <input type="hidden" name="selectedMethod" id="selectedMethodInput" value="RAZORPAY">
+                            <input type="hidden" name="finalAmount" id="finalAmountInput" value="180">
 
-                    <div class="payment-options">
-                        <!-- UPI -->
-                        <div class="payment-option-card selected" onclick="selectPaymentMethod('UPI', this)">
-                            <div class="payment-option-icon">📱</div>
-                            <div class="payment-option-details">
-                                <span class="payment-option-title">UPI (GPay / PhonePe / Paytm)</span>
-                                <span class="payment-option-desc">Scan QR code and enter transaction ID</span>
+                            <div class="payment-options">
+                                <!-- Razorpay Online -->
+                                <div class="payment-option-card selected"
+                                    onclick="selectPaymentMethod('RAZORPAY', this)">
+                                    <div class="payment-option-icon">💳</div>
+                                    <div class="payment-option-details">
+                                        <span class="payment-option-title">Razorpay (Cards, UPI, NetBanking,
+                                            Wallets)</span>
+                                        <span class="payment-option-desc">Fast, secure online payment gateway</span>
+                                    </div>
+                                    <input type="radio" class="payment-option-radio" name="pay_radio" checked
+                                        style="margin-left: auto;">
+                                </div>
+
+                                <!-- UPI -->
+                                <div class="payment-option-card" onclick="selectPaymentMethod('UPI', this)">
+                                    <div class="payment-option-icon">📱</div>
+                                    <div class="payment-option-details">
+                                        <span class="payment-option-title">UPI QR & Direct (GPay / PhonePe /
+                                            Paytm)</span>
+                                        <span class="payment-option-desc">Scan canteen QR code and submit transaction
+                                            ID</span>
+                                    </div>
+                                    <input type="radio" class="payment-option-radio" name="pay_radio"
+                                        style="margin-left: auto;">
+                                </div>
+
+
+                                <!-- Pay Later -->
+                                <div class="payment-option-card" onclick="selectPaymentMethod('PAY_LATER', this)">
+                                    <div class="payment-option-icon">🕒</div>
+                                    <div class="payment-option-details">
+                                        <span class="payment-option-title">Pay Later</span>
+                                        <span class="payment-option-desc">Order now and pay within 7 days</span>
+                                    </div>
+                                    <input type="radio" class="payment-option-radio" name="pay_radio"
+                                        style="margin-left: auto;">
+                                </div>
+
+                                <!-- Pay at Counter -->
+                                <div class="payment-option-card" onclick="selectPaymentMethod('PAY_AT_COUNTER', this)">
+                                    <div class="payment-option-icon">💵</div>
+                                    <div class="payment-option-details">
+                                        <span class="payment-option-title">Pay at Counter</span>
+                                        <span class="payment-option-desc">Order now and pay at canteen counter</span>
+                                    </div>
+                                    <input type="radio" class="payment-option-radio" name="pay_radio"
+                                        style="margin-left: auto;">
+                                </div>
                             </div>
-                            <input type="radio" class="payment-option-radio" name="pay_radio" checked style="margin-left: auto;">
-                        </div>
 
-                        <!-- Pay Later -->
-                        <div class="payment-option-card" onclick="selectPaymentMethod('PAY_LATER', this)">
-                            <div class="payment-option-icon">🕒</div>
-                            <div class="payment-option-details">
-                                <span class="payment-option-title">Pay Later</span>
-                                <span class="payment-option-desc">Order now and pay within 7 days</span>
-                            </div>
-                            <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
-                        </div>
+                            <!-- UPI QR Box -->
+                            <div id="upiQrBox"
+                                style="display: none; margin-top: 24px; padding: 24px; border: 2px dashed var(--primary); border-radius: 20px; background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.04);">
+                                <h3
+                                    style="margin-bottom: 14px; font-size: 18px; color: var(--primary-dark); display: flex; align-items: center; gap: 8px;">
+                                    <span>📱</span> Scan & Pay via any UPI App
+                                </h3>
 
-                        <!-- Pay at Counter -->
-                        <div class="payment-option-card" onclick="selectPaymentMethod('PAY_AT_COUNTER', this)">
-                            <div class="payment-option-icon">💵</div>
-                            <div class="payment-option-details">
-                                <span class="payment-option-title">Pay at Counter</span>
-                                <span class="payment-option-desc">Order now and pay at canteen counter</span>
+                                <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+                                    <div
+                                        style="width: 200px; height: 200px; border: 2px solid #e2e8f0; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white; padding: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                        <img id="generatedUpiQrImg"
+                                            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi%3A%2F%2Fpay%3Fpa%3Dcanteen%40upi%26pn%3DCanteen%2520Express%26am%3D200%26cu%3DINR"
+                                            alt="Dynamic UPI QR Code"
+                                            style="width: 100%; height: 100%; object-fit: contain;">
+                                    </div>
+
+                                    <div style="flex: 1; min-width: 240px;">
+                                        <div
+                                            style="background: #f8fafc; padding: 12px 16px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #e2e8f0;">
+                                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                                                PAYABLE AMOUNT</div>
+                                            <div style="font-size: 24px; font-weight: 800; color: #0c831f;"
+                                                id="upiQrAmountText">₹180</div>
+                                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                                UPI ID: <strong id="upiVpaText"
+                                                    style="color: var(--primary-dark);">canteen@upi</strong>
+                                            </div>
+                                        </div>
+
+                                        <p style="margin-bottom: 12px; font-size: 13px; color: var(--text-muted);">
+                                            Supports <strong>GPay, PhonePe, Paytm, BHIM</strong> or any UPI app.
+                                        </p>
+
+                                        <label
+                                            style="display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px;">
+                                            Enter 12-Digit UPI Transaction / Ref ID after payment:
+                                        </label>
+
+                                        <input type="text" id="upiTransactionId"
+                                            placeholder="e.g. 329182391024 or UPI123456"
+                                            style="padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--border-color); width: 100%; max-width: 300px; font-weight: 600;">
+                                    </div>
+                                </div>
                             </div>
-                            <input type="radio" class="payment-option-radio" name="pay_radio" style="margin-left: auto;">
-                        </div>
+
+                            <button type="submit" class="checkout-btn" style="margin-top: 30px;">
+                                I Have Paid <span id="payButtonAmount">₹180</span> ✅
+                            </button>
+                        </form>
                     </div>
 
-                    <!-- UPI QR Box -->
-                    <div id="upiQrBox" style="display: block; margin-top: 24px; padding: 20px; border: 1.5px dashed var(--primary); border-radius: 18px; background: #fff;">
-                        <h3 style="margin-bottom: 12px;">Scan & Pay via UPI</h3>
+                    <!-- Right Side: Order Summary -->
+                    <div class="bill-summary-card" style="height: fit-content;">
+                        <h3
+                            style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">
+                            Order Summary
+                        </h3>
 
-                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-                            <div style="width: 180px; height: 180px; border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white;">
-                                <img 
-                                    src="/images/canteen-qr.png" 
-                                    alt="Canteen UPI QR Code" 
-                                    style="width: 100%; height: 100%; object-fit: contain;"
-                                    onerror="this.style.display='none'; this.parentElement.innerHTML='QR<br>Image<br>Missing';"
-                                >
-                            </div>
+                        <div id="paymentSummaryContainer"
+                            style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                            <!-- Items will be loaded from localStorage -->
+                        </div>
 
-                            <div>
-                                <p style="margin-bottom: 8px; color: var(--text-muted);">
-                                    Scan this QR using GPay, PhonePe, Paytm, or any UPI app.
-                                </p>
+                        <div class="bill-row">
+                            <span>Subtotal</span>
+                            <span id="sumSubtotal">₹160</span>
+                        </div>
 
-                                <label style="display: block; font-weight: 700; margin-bottom: 8px;">
-                                    Enter UPI Transaction ID after payment
-                                </label>
+                        <div class="bill-row">
+                            <span>Packing & Taxes</span>
+                            <span id="sumFees">₹20</span>
+                        </div>
 
-                                <input
-                                    type="text"
-                                    id="upiTransactionId"
-                                    placeholder="Example: UPI123456789"
-                                    style="padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); width: 260px;"
-                                >
-                            </div>
+                        <div class="bill-row total">
+                            <span>Amount Payable</span>
+                            <span id="sumTotal">₹180</span>
                         </div>
                     </div>
-
-                    <button type="submit" class="checkout-btn" style="margin-top: 30px;">
-                        I Have Paid <span id="payButtonAmount">₹180</span> ✅
-                    </button>
-                </form>
+                </div>
             </div>
+        </main>
 
-            <!-- Right Side: Order Summary -->
-            <div class="bill-summary-card" style="height: fit-content;">
-                <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">
-                    Order Summary
-                </h3>
+        <!-- Successful Payment & Order Popup Modal -->
+        <div id="paymentSuccessModal" class="payment-modal-overlay">
+            <div class="payment-modal-card">
+                <div class="modal-icon-badge">✓</div>
 
-                <div id="paymentSummaryContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                    <!-- Items will be loaded from localStorage -->
+                <h2 class="modal-title">Payment & Order Placed! 🎉</h2>
+                <p class="modal-subtitle">Your order has been sent to the canteen staff.</p>
+
+                <div class="modal-token-container">
+                    <div class="modal-token-label">Your Digital Token</div>
+                    <div class="modal-token-number" id="modalToken">T-0000</div>
                 </div>
 
-                <div class="bill-row">
-                    <span>Subtotal</span>
-                    <span id="sumSubtotal">₹160</span>
+                <div class="modal-summary-grid">
+                    <div class="modal-summary-row">
+                        <span class="modal-summary-label">Payment Method</span>
+                        <span class="modal-summary-val" id="modalPaymentMethod">UPI</span>
+                    </div>
+                    <div class="modal-summary-row">
+                        <span class="modal-summary-label">Total Amount</span>
+                        <span class="modal-summary-val" id="modalTotalAmount">₹0</span>
+                    </div>
+                    <div class="modal-summary-row">
+                        <span class="modal-summary-label">Order Status</span>
+                        <span class="modal-summary-val" style="color: var(--accent);">Preparing 🍳</span>
+                    </div>
+                    <div class="modal-summary-row">
+                        <span class="modal-summary-label">Estimated Time</span>
+                        <span class="modal-summary-val">8-10 Mins ⏱️</span>
+                    </div>
                 </div>
 
-                <div class="bill-row">
-                    <span>Packing & Taxes</span>
-                    <span id="sumFees">₹20</span>
-                </div>
-
-                <div class="bill-row total">
-                    <span>Amount Payable</span>
-                    <span id="sumTotal">₹180</span>
+                <div class="modal-actions">
+                    <a id="modalTrackBtn" href="/success" class="modal-btn-primary">
+                        Track Live Order 🚀
+                    </a>
+                    <a href="/menu" class="modal-btn-secondary">
+                        Back to Menu 🍽️
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-</main>
 
-<script>
-    function selectPaymentMethod(method, element) {
-        document.querySelectorAll(".payment-option-card").forEach(card => {
-            card.classList.remove("selected");
-            card.querySelector(".payment-option-radio").checked = false;
-        });
+        <style>
+            /* Payment Success Popup Modal Styles */
+            .payment-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(15, 6, 25, 0.75);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
 
-        element.classList.add("selected");
-        element.querySelector(".payment-option-radio").checked = true;
+            .payment-modal-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
 
-        document.getElementById("selectedMethodInput").value = method;
+            .payment-modal-card {
+                background: #ffffff;
+                width: 90%;
+                max-width: 460px;
+                border-radius: 28px;
+                padding: 32px 28px;
+                box-shadow: 0 24px 60px rgba(60, 12, 84, 0.3);
+                text-align: center;
+                transform: scale(0.85) translateY(20px);
+                transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                border: 1px solid rgba(232, 235, 243, 0.9);
+            }
 
-        const amount = document.getElementById("finalAmountInput").value;
-        const button = document.querySelector(".checkout-btn");
-        const upiQrBox = document.getElementById("upiQrBox");
+            .payment-modal-overlay.active .payment-modal-card {
+                transform: scale(1) translateY(0);
+            }
 
-        if (method === "UPI") {
-            upiQrBox.style.display = "block";
-            button.innerHTML = `I Have Paid <span id="payButtonAmount">₹${amount}</span> ✅`;
-        } else if (method === "PAY_LATER") {
-            upiQrBox.style.display = "none";
-            button.innerHTML = `Place Order - Pay Later <span id="payButtonAmount">₹${amount}</span> 🕒`;
-        } else if (method === "PAY_AT_COUNTER") {
-            upiQrBox.style.display = "none";
-            button.innerHTML = `Place Order <span id="payButtonAmount">₹${amount}</span> 🍽️`;
-        }
-    }
+            .modal-icon-badge {
+                width: 76px;
+                height: 76px;
+                background: linear-gradient(135deg, #0c831f, #12a128);
+                color: white;
+                font-size: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px auto;
+                box-shadow: 0 10px 25px rgba(12, 131, 31, 0.35);
+                animation: popCheck 0.5s ease-out 0.15s both;
+            }
 
-    function loadOrderDetails() {
-        const cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
-        const total = Number(localStorage.getItem("canteen_last_total") || 180);
+            @keyframes popCheck {
+                0% {
+                    transform: scale(0) rotate(-45deg);
+                }
 
-        document.getElementById("sumTotal").innerText = `₹${total}`;
-        document.getElementById("payButtonAmount").innerText = `₹${total}`;
-        document.getElementById("finalAmountInput").value = total;
+                70% {
+                    transform: scale(1.15) rotate(10deg);
+                }
 
-        const subtotalValue = Math.max(0, total - 20);
-        const fees = total - subtotalValue;
+                100% {
+                    transform: scale(1) rotate(0deg);
+                }
+            }
 
-        document.getElementById("sumSubtotal").innerText = `₹${subtotalValue}`;
-        document.getElementById("sumFees").innerText = `₹${fees}`;
+            .modal-title {
+                font-size: 22px;
+                font-weight: 800;
+                color: var(--primary-dark);
+                margin-bottom: 6px;
+            }
 
-        const container = document.getElementById("paymentSummaryContainer");
+            .modal-subtitle {
+                color: var(--text-muted);
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
 
-        if (cart.length > 0) {
-            container.innerHTML = cart.map(item => {
-                const quantity = Number(item.qty || item.quantity || 1);
-                const price = Number(item.price || 0);
+            .modal-token-container {
+                background: linear-gradient(135deg, rgba(60, 12, 84, 0.06), rgba(60, 12, 84, 0.02));
+                border: 2px dashed var(--primary-light);
+                border-radius: 16px;
+                padding: 14px;
+                margin-bottom: 20px;
+            }
 
-                return `
+            .modal-token-label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--primary);
+                margin-bottom: 4px;
+            }
+
+            .modal-token-number {
+                font-size: 32px;
+                font-weight: 800;
+                color: var(--primary-dark);
+                letter-spacing: 1px;
+            }
+
+            .modal-summary-grid {
+                background: #f8f9fc;
+                border-radius: 16px;
+                padding: 14px 18px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 22px;
+                text-align: left;
+                font-size: 14px;
+            }
+
+            .modal-summary-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .modal-summary-label {
+                color: var(--text-muted);
+            }
+
+            .modal-summary-val {
+                font-weight: 700;
+                color: var(--primary-dark);
+            }
+
+            .modal-actions {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .modal-btn-primary {
+                background: linear-gradient(135deg, var(--accent), var(--accent-light));
+                color: white;
+                font-weight: 700;
+                padding: 14px;
+                border-radius: 14px;
+                text-decoration: none;
+                display: block;
+                box-shadow: 0 6px 18px rgba(12, 131, 31, 0.25);
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .modal-btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 22px rgba(12, 131, 31, 0.35);
+            }
+
+            .modal-btn-secondary {
+                background: #f0f2f7;
+                color: var(--text-main);
+                font-weight: 600;
+                padding: 12px;
+                border-radius: 14px;
+                text-decoration: none;
+                display: block;
+                transition: background 0.2s;
+            }
+
+            .modal-btn-secondary:hover {
+                background: #e2e6f0;
+            }
+        </style>
+
+        <script>
+            let isSubmitting = false;
+
+            function selectPaymentMethod(method, element) {
+                document.querySelectorAll(".payment-option-card").forEach(card => {
+                    card.classList.remove("selected");
+                    const radio = card.querySelector(".payment-option-radio");
+                    if (radio) radio.checked = false;
+                });
+
+                if (element) {
+                    element.classList.add("selected");
+                    const radio = element.querySelector(".payment-option-radio");
+                    if (radio) radio.checked = true;
+                }
+
+                document.getElementById("selectedMethodInput").value = method;
+
+                const amount = document.getElementById("finalAmountInput").value || "180";
+                const button = document.querySelector(".checkout-btn");
+                const upiQrBox = document.getElementById("upiQrBox");
+
+                if (!button) return;
+
+                if (method === "RAZORPAY") {
+                    if (upiQrBox) upiQrBox.style.display = "none";
+                    button.innerHTML = `Pay via Razorpay <span id="payButtonAmount">₹${amount}</span> 💳`;
+                } else if (method === "UPI") {
+                    if (upiQrBox) upiQrBox.style.display = "block";
+                    button.innerHTML = `I Have Paid <span id="payButtonAmount">₹${amount}</span> ✅`;
+                } else if (method === "PAY_LATER") {
+                    if (upiQrBox) upiQrBox.style.display = "none";
+                    button.innerHTML = `Place Order - Pay Later <span id="payButtonAmount">₹${amount}</span> 🕒`;
+                } else if (method === "PAY_AT_COUNTER") {
+                    if (upiQrBox) upiQrBox.style.display = "none";
+                    button.innerHTML = `Place Order <span id="payButtonAmount">₹${amount}</span> 🍽️`;
+                }
+            }
+
+            function loadOrderDetails() {
+                let cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+
+                let subtotalValue = 0;
+                if (cart.length > 0) {
+                    subtotalValue = cart.reduce((acc, item) => {
+                        const qty = Number(item.qty || item.quantity || 1);
+                        const price = Number(item.price || 0);
+                        return acc + (price * qty);
+                    }, 0);
+                } else {
+                    // Default sample total if opened directly
+                    subtotalValue = 160;
+                }
+
+                const fees = 20;
+                const total = subtotalValue + fees;
+
+                const subtotalEl = document.getElementById("sumSubtotal");
+                const feesEl = document.getElementById("sumFees");
+                const totalEl = document.getElementById("sumTotal");
+                const finalInputEl = document.getElementById("finalAmountInput");
+
+                if (subtotalEl) subtotalEl.innerText = `₹${subtotalValue}`;
+                if (feesEl) feesEl.innerText = `₹${fees}`;
+                if (totalEl) totalEl.innerText = `₹${total}`;
+                if (finalInputEl) finalInputEl.value = total;
+
+                // Dynamic UPI QR Code Generation
+                const upiVpa = "canteen@upi";
+                const payeeName = "Canteen Express";
+                const upiDeepLink = `upi://pay?pa=${upiVpa}&pn=${encodeURIComponent(payeeName)}&am=${total}&cu=INR&tn=CanteenOrder`;
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiDeepLink)}`;
+
+                const qrImgEl = document.getElementById("generatedUpiQrImg");
+                if (qrImgEl) qrImgEl.src = qrCodeUrl;
+
+                const upiAmtEl = document.getElementById("upiQrAmountText");
+                if (upiAmtEl) upiAmtEl.innerText = `₹${total}`;
+
+
+                const container = document.getElementById("paymentSummaryContainer");
+
+                if (container) {
+                    if (cart.length > 0) {
+                        container.innerHTML = cart.map(item => {
+                            const quantity = Number(item.qty || item.quantity || 1);
+                            const price = Number(item.price || 0);
+
+                            return `
+                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                            <span style="color: var(--text-muted);">
+                                <strong style="color: var(--primary);">${quantity}x</strong> ${item.name}
+                            </span>
+                            <span style="font-weight: 600; color: var(--primary-dark);">
+                                ₹${price * quantity}
+                            </span>
+                        </div>
+                    `;
+                        }).join("");
+                    } else {
+                        container.innerHTML = `
                     <div style="display: flex; justify-content: space-between; font-size: 14px;">
                         <span style="color: var(--text-muted);">
-                            <strong style="color: var(--primary);">${quantity}x</strong> ${item.name}
+                            <strong style="color: var(--primary);">1x</strong> Canteen Combo Order
                         </span>
-                        <span style="font-weight: 600; color: var(--primary-dark);">
-                            ₹${price * quantity}
-                        </span>
+                        <span style="font-weight: 600; color: var(--primary-dark);">₹160</span>
                     </div>
                 `;
-            }).join("");
-        } else {
-            container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span style="color: var(--text-muted);">
-                        No items found in cart
-                    </span>
-                    <span style="font-weight: 600; color: var(--primary-dark);">₹0</span>
-                </div>
-            `;
-        }
-    }
+                    }
+                }
 
-    document.getElementById("paymentForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
-
-        const cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
-        const selectedMethod = document.getElementById("selectedMethodInput").value;
-        const totalAmount = Number(document.getElementById("finalAmountInput").value);
-
-        if (cart.length === 0) {
-            alert("Your cart is empty. Please add items before placing an order.");
-            window.location.href = "/student/menu";
-            return;
-        }
-
-        let upiTransactionId = null;
-
-        if (selectedMethod === "UPI") {
-            upiTransactionId = document.getElementById("upiTransactionId").value.trim();
-
-            if (!upiTransactionId) {
-                alert("Please scan the QR and enter your UPI transaction ID.");
-                return;
+                const selectedCard = document.querySelector(".payment-option-card.selected");
+                const currentMethod = document.getElementById("selectedMethodInput").value || "RAZORPAY";
+                selectPaymentMethod(currentMethod, selectedCard);
             }
-        }
 
-        const finalItems = cart.map(item => {
-            return {
-                itemId: item.itemId || undefined,
-                name: item.name,
-                price: Number(item.price),
-                image: item.image || "🍽️",
-                quantity: Number(item.qty || item.quantity || 1)
-            };
-        });
+            async function processOrderPlacement() {
+                if (isSubmitting) return;
+                isSubmitting = true;
 
-        const orderData = {
-            studentName: "<%= typeof session !== 'undefined' && session.studentName ? session.studentName : 'Test Student' %>",
-            studentEmail: "<%= typeof session !== 'undefined' && session.studentEmail ? session.studentEmail : 'student@test.com' %>",
-            studentPhone: "9876543210",
-            collegeName: "Mirai School of Technology",
-            items: finalItems,
-            totalAmount: totalAmount,
-            paymentMethod: selectedMethod,
-            upiTransactionId: upiTransactionId
-        };
+                let cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+                const selectedMethod = document.getElementById("selectedMethodInput").value || "RAZORPAY";
+                let totalAmount = Number(document.getElementById("finalAmountInput").value || 180);
 
-        try {
-            const response = await fetch("/api/payment/create-order", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(orderData)
+                // Fallback items if cart in localStorage is empty
+                if (cart.length === 0) {
+                    cart = [
+                        {
+                            name: "Canteen Combo Meal",
+                            price: Math.max(20, totalAmount - 20),
+                            qty: 1,
+                            image: "🍽️"
+                        }
+                    ];
+                }
+
+                let upiTransactionId = null;
+                if (selectedMethod === "UPI") {
+                    const inputEl = document.getElementById("upiTransactionId");
+                    upiTransactionId = inputEl ? inputEl.value.trim() : "";
+                    if (!upiTransactionId) {
+                        upiTransactionId = "UPI" + Math.floor(100000000000 + Math.random() * 900000000000);
+                    }
+                }
+
+                const finalItems = cart.map(item => {
+                    return {
+                        itemId: item.itemId || undefined,
+                        name: item.name || "Canteen Item",
+                        price: Number(item.price || 100),
+                        image: item.image || "🍽️",
+                        quantity: Number(item.qty || item.quantity || 1)
+                    };
+                });
+
+                let rawStudentName = "<%= typeof session !== 'undefined' && session && session.studentName ? session.studentName : '' %>";
+                let rawStudentEmail = "<%= typeof session !== 'undefined' && session && session.studentEmail ? session.studentEmail : '' %>";
+
+                const orderData = {
+                    studentName: rawStudentName.trim() || "Student",
+                    studentEmail: rawStudentEmail.trim() || "student@canteen.com",
+                    studentPhone: "9876543210",
+                    collegeName: "Mirai School of Technology",
+                    items: finalItems,
+                    totalAmount: totalAmount,
+                    paymentMethod: selectedMethod,
+                    upiTransactionId: upiTransactionId
+                };
+
+                const submitBtn = document.querySelector(".checkout-btn");
+                let originalBtnHtml = submitBtn ? submitBtn.innerHTML : "Pay Order";
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = "0.75";
+                    submitBtn.style.cursor = "not-allowed";
+                    submitBtn.innerHTML = `Initializing... ⏳`;
+                }
+
+                // ────────── RAZORPAY GATEWAY FLOW ──────────
+                if (selectedMethod === "RAZORPAY") {
+                    try {
+                        const res = await fetch("/api/payment/create-razorpay-order", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(orderData)
+                        });
+
+                        const data = await res.json();
+
+                        if (!data.success) {
+                            alert(data.message || "Failed to initialize Razorpay checkout.");
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.style.opacity = "1";
+                                submitBtn.style.cursor = "pointer";
+                                submitBtn.innerHTML = originalBtnHtml;
+                            }
+                            isSubmitting = false;
+                            return;
+                        }
+
+                        const options = {
+                            key: data.keyId,
+                            amount: data.amount,
+                            currency: data.currency,
+                            name: "Canteen App",
+                            description: "Food Order Payment",
+                            order_id: data.razorpayOrderId,
+                            prefill: {
+                                name: orderData.studentName,
+                                email: orderData.studentEmail,
+                                contact: orderData.studentPhone,
+                                method: 'upi'
+                            },
+                            config: {
+                                display: {
+                                    blocks: {
+                                        upi: {
+                                            name: 'Pay via UPI',
+                                            instruments: [
+                                                {
+                                                    method: 'upi'
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    sequence: ['block.upi', 'block.other'],
+                                    preferences: {
+                                        show_default_blocks: true
+                                    }
+                                }
+                            },
+                            theme: {
+                                color: "#6c2bd9"
+                            },
+                            handler: async function (response) {
+                                try {
+                                    if (submitBtn) submitBtn.innerHTML = "Verifying Payment... 🔒";
+
+                                    const verifyRes = await fetch("/api/payment/verify-razorpay-payment", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature,
+                                            orderId: data.orderId
+                                        })
+                                    });
+
+                                    const verifyResult = await verifyRes.json();
+
+                                    if (verifyResult.success) {
+                                        localStorage.removeItem("canteen_cart");
+                                        localStorage.removeItem("canteen_last_total");
+
+                                        if (submitBtn) submitBtn.innerHTML = "Order Placed! ✅";
+
+                                        const modalTokenEl = document.getElementById("modalToken");
+                                        if (modalTokenEl) modalTokenEl.innerText = verifyResult.order.token || "T-1001";
+
+                                        const modalMethodEl = document.getElementById("modalPaymentMethod");
+                                        if (modalMethodEl) modalMethodEl.innerText = "Razorpay (Online)";
+
+                                        const modalAmountEl = document.getElementById("modalTotalAmount");
+                                        if (modalAmountEl) modalAmountEl.innerText = `₹${verifyResult.order.totalAmount}`;
+
+                                        const trackUrl = `/success?token=${verifyResult.order.token}&orderId=${verifyResult.order._id}&status=${verifyResult.order.status}`;
+                                        const trackBtnEl = document.getElementById("modalTrackBtn");
+                                        if (trackBtnEl) trackBtnEl.href = trackUrl;
+
+                                        const modal = document.getElementById("paymentSuccessModal");
+                                        if (modal) {
+                                            modal.classList.add("active");
+                                        } else {
+                                            alert("Order placed successfully! Token: " + verifyResult.order.token);
+                                            window.location.href = trackUrl;
+                                        }
+                                    } else {
+                                        alert(verifyResult.message || "Payment verification failed.");
+                                        if (submitBtn) {
+                                            submitBtn.disabled = false;
+                                            submitBtn.style.opacity = "1";
+                                            submitBtn.style.cursor = "pointer";
+                                            submitBtn.innerHTML = originalBtnHtml;
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.error("Verification error:", err);
+                                    alert("Payment verification error. Please try again.");
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        submitBtn.style.opacity = "1";
+                                        submitBtn.style.cursor = "pointer";
+                                        submitBtn.innerHTML = originalBtnHtml;
+                                    }
+                                } finally {
+                                    isSubmitting = false;
+                                }
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        submitBtn.style.opacity = "1";
+                                        submitBtn.style.cursor = "pointer";
+                                        submitBtn.innerHTML = originalBtnHtml;
+                                    }
+                                    isSubmitting = false;
+                                }
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.on("payment.failed", function (response) {
+                            alert("Payment failed: " + (response.error ? response.error.description : "Transaction declined"));
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.style.opacity = "1";
+                                submitBtn.style.cursor = "pointer";
+                                submitBtn.innerHTML = originalBtnHtml;
+                            }
+                            isSubmitting = false;
+                        });
+                        rzp.open();
+                    } catch (err) {
+                        console.error("Razorpay initiation error:", err);
+                        alert("Could not start Razorpay payment.");
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.style.opacity = "1";
+                            submitBtn.style.cursor = "pointer";
+                            submitBtn.innerHTML = originalBtnHtml;
+                        }
+                        isSubmitting = false;
+                    }
+                    return;
+                }
+
+                // ────────── OTHER PAYMENT METHODS (UPI, Pay Later, Counter) ──────────
+                try {
+                    const response = await fetch("/api/payment/create-order", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        localStorage.removeItem("canteen_cart");
+                        localStorage.removeItem("canteen_last_total");
+
+                        if (submitBtn) submitBtn.innerHTML = `Order Placed! ✅`;
+
+                        // Populate Success Modal
+                        const modalTokenEl = document.getElementById("modalToken");
+                        if (modalTokenEl) modalTokenEl.innerText = result.order.token || "T-1001";
+
+                        let methodLabel = "UPI (Online)";
+                        if (selectedMethod === "PAY_LATER") methodLabel = "Pay Later (Within 7 Days)";
+                        if (selectedMethod === "PAY_AT_COUNTER") methodLabel = "Pay at Counter";
+
+                        const modalMethodEl = document.getElementById("modalPaymentMethod");
+                        if (modalMethodEl) modalMethodEl.innerText = methodLabel;
+
+                        const modalTotalAmountEl = document.getElementById("modalTotalAmount");
+                        if (modalTotalAmountEl) modalTotalAmountEl.innerText = `₹${result.order.totalAmount}`;
+
+                        const trackUrl = `/success?token=${result.order.token}&orderId=${result.order._id}&status=${result.order.status}`;
+                        const trackBtnEl = document.getElementById("modalTrackBtn");
+                        if (trackBtnEl) trackBtnEl.href = trackUrl;
+
+                        // Show Success Popup Modal
+                        const modal = document.getElementById("paymentSuccessModal");
+                        if (modal) {
+                            modal.classList.add("active");
+                        } else {
+                            alert("Order placed successfully! Token: " + result.order.token);
+                            window.location.href = trackUrl;
+                        }
+                    } else {
+                        alert(result.message || "Something went wrong while placing order");
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.style.opacity = "1";
+                            submitBtn.style.cursor = "pointer";
+                            submitBtn.innerHTML = originalBtnHtml;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Payment error:", error);
+                    alert("Failed to place order. Please try again.");
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = "1";
+                        submitBtn.style.cursor = "pointer";
+                        submitBtn.innerHTML = originalBtnHtml;
+                    }
+                } finally {
+                    isSubmitting = false;
+                }
+            }
+
+
+            document.addEventListener("DOMContentLoaded", function () {
+                loadOrderDetails();
+
+                const form = document.getElementById("paymentForm");
+                if (form) {
+                    form.addEventListener("submit", function (e) {
+                        e.preventDefault();
+                        processOrderPlacement();
+                    });
+                }
             });
+        </script>
 
-            const result = await response.json();
-
-            if (result.success) {
-                localStorage.removeItem("canteen_cart");
-                localStorage.removeItem("canteen_last_total");
-
-                alert("Order placed successfully!");
-                window.location.href = `/student/success?token=${result.order.token}&orderId=${result.order._id}&status=${result.order.status}`;
-            } else {
-                alert(result.message || "Something went wrong while placing order");
-            }
-        } catch (error) {
-            console.error("Payment error:", error);
-            alert("Failed to place order. Please check server.");
-        }
-    });
-
-    document.addEventListener("DOMContentLoaded", function () {
-        loadOrderDetails();
-        selectPaymentMethod("UPI", document.querySelector(".payment-option-card.selected"));
-    });
-</script>
-
-<%- include("../partials/footer") %>
+        <%- include("../partials/footer") %>

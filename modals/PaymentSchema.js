@@ -27,7 +27,7 @@ const paymentSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["UPI", "PAY_LATER", "PAY_AT_COUNTER"],
+      enum: ["UPI", "PAY_LATER", "PAY_AT_COUNTER", "RAZORPAY", "razorpay"],
       required: true,
     },
 
@@ -41,6 +41,22 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    razorpayOrderId: {
+      type: String,
+      default: null,
+    },
+
+    razorpayPaymentId: {
+      type: String,
+      default: null,
+    },
+
+    razorpaySignature: {
+      type: String,
+      default: null,
+    },
+
 
     dueDate: {
       type: Date,

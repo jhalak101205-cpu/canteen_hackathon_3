@@ -5,10 +5,42 @@
     <div class="auth-card">
         <div class="auth-header">
             <h2 class="auth-title">⚡ Student Sign Up</h2>
-            <p class="auth-subtitle">Create your student profile via email OTP</p>
+            <p class="auth-subtitle">Create your account to order canteen food</p>
         </div>
 
-        <div id="sign-up" style="display: flex; justify-content: center; width: 100%; min-height: 200px;"></div>
+        <!-- Clerk Sign Up Mount Container -->
+        <div id="sign-up" style="display: none; justify-content: center; width: 100%; margin-bottom: 20px;"></div>
+
+        <!-- Fallback Student Sign Up Form (shown only if Clerk is not active) -->
+        <form id="fallback-form" action="/auth/studentLogin" method="POST">
+            <div class="form-group">
+                <label class="form-label" style="font-size: 13px; font-weight: 700;">Full Name</label>
+                <input 
+                    type="text" 
+                    name="name" 
+                    class="form-input" 
+                    placeholder="Enter your full name"
+                    required
+                    style="font-size: 14px;"
+                >
+            </div>
+
+            <div class="form-group" style="margin-top: 14px;">
+                <label class="form-label" style="font-size: 13px; font-weight: 700;">Student Email</label>
+                <input 
+                    type="email" 
+                    name="email" 
+                    class="form-input" 
+                    placeholder="Enter student email (e.g. student@canteen.com)"
+                    required
+                    style="font-size: 14px;"
+                >
+            </div>
+
+            <button type="submit" class="auth-btn" style="margin-top: 20px; font-size: 15px; padding: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-light));">
+                Create Account & Go to Menu 🚀
+            </button>
+        </form>
 
         <div class="auth-footer">
             <p>Already have an account? <a href="/sign-in">Sign In</a></p>
@@ -21,21 +53,38 @@
 <%- include("../partials/clerkScripts") %>
 <script>
     function initSignUp() {
-        if (window.Clerk) {
-            window.Clerk.mountSignUp(document.getElementById("sign-up"), {
-                signInUrl: "/sign-in",
-                fallbackRedirectUrl: "/menu",
-                appearance: {
-                    variables: {
-                        colorPrimary: '#3c0c54',
-                        fontFamily: 'Outfit, sans-serif'
+        const target = document.getElementById("sign-up");
+        const fallbackForm = document.getElementById("fallback-form");
+
+        if (window.Clerk && target && !target.hasChildNodes()) {
+            target.style.display = "flex";
+            if (fallbackForm) fallbackForm.style.display = "none";
+
+            try {
+                window.Clerk.mountSignUp(target, {
+                    signInUrl: "/sign-in",
+                    fallbackRedirectUrl: "/menu",
+                    signUpForceRedirectUrl: "/menu",
+                    appearance: {
+                        variables: {
+                            colorPrimary: '#3c0c54',
+                            fontFamily: 'Outfit, sans-serif'
+                        }
                     }
-                }
-            });
+                });
+            } catch (err) {
+                console.warn("Clerk sign-up mount exception, falling back to simple form:", err);
+                target.style.display = "none";
+                if (fallbackForm) fallbackForm.style.display = "block";
+            }
         }
     }
 
-    window.addEventListener("clerk-ready", initSignUp);
+    if (window.clerkReady || (window.Clerk && window.Clerk.loaded)) {
+        initSignUp();
+    } else {
+        window.addEventListener("clerk-ready", initSignUp);
+    }
 </script>
 
 <%- include("../partials/footer") %>

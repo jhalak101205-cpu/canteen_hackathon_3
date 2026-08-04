@@ -5,10 +5,29 @@
     <div class="auth-card">
         <div class="auth-header">
             <h2 class="auth-title">⚡ Student Login</h2>
-            <p class="auth-subtitle">Verify your email via OTP to continue</p>
+            <p class="auth-subtitle">Sign in to order food, track status & view menu</p>
         </div>
 
-        <div id="sign-in" style="display: flex; justify-content: center; width: 100%; min-height: 200px;"></div>
+        <!-- Clerk Sign In Mount Container -->
+        <div id="sign-in" style="display: none; justify-content: center; width: 100%; margin-bottom: 20px;"></div>
+
+        <!-- Fallback Quick Email Login Form (shown only if Clerk is not active) -->
+        <form id="fallback-form" action="/auth/studentLogin" method="POST">
+            <div class="form-group">
+                <label class="form-label" style="font-size: 13px; font-weight: 700;">Student Email</label>
+                <input 
+                    type="email" 
+                    name="email" 
+                    class="form-input" 
+                    placeholder="Enter student email (e.g. student@canteen.com)"
+                    required
+                    style="font-size: 14px;"
+                >
+            </div>
+            <button type="submit" class="auth-btn" style="margin-top: 16px; font-size: 15px; padding: 12px;">
+                Continue to Menu ➡️
+            </button>
+        </form>
 
         <div class="auth-footer">
             <p>Don't have an account? <a href="/sign-up">Sign Up</a></p>
@@ -21,21 +40,39 @@
 <%- include("../partials/clerkScripts") %>
 <script>
     function initSignIn() {
-        if (window.Clerk) {
-            window.Clerk.mountSignIn(document.getElementById("sign-in"), {
-                signUpUrl: "/sign-up",
-                fallbackRedirectUrl: "/menu",
-                appearance: {
-                    variables: {
-                        colorPrimary: '#3c0c54',
-                        fontFamily: 'Outfit, sans-serif'
+        const target = document.getElementById("sign-in");
+        const fallbackForm = document.getElementById("fallback-form");
+
+        if (window.Clerk && target && !target.hasChildNodes()) {
+            target.style.display = "flex";
+            if (fallbackForm) fallbackForm.style.display = "none";
+
+            try {
+                window.Clerk.mountSignIn(target, {
+                    signUpUrl: "/sign-up",
+                    fallbackRedirectUrl: "/menu",
+                    signInForceRedirectUrl: "/menu",
+                    appearance: {
+                        variables: {
+                            colorPrimary: '#3c0c54',
+                            fontFamily: 'Outfit, sans-serif'
+                        }
                     }
-                }
-            });
+                });
+            } catch (err) {
+                console.warn("Clerk mount exception, falling back to simple form:", err);
+                target.style.display = "none";
+                if (fallbackForm) fallbackForm.style.display = "block";
+            }
         }
     }
 
-    window.addEventListener("clerk-ready", initSignIn);
+    if (window.clerkReady || (window.Clerk && window.Clerk.loaded)) {
+        initSignIn();
+    } else {
+        window.addEventListener("clerk-ready", initSignIn);
+    }
 </script>
 
 <%- include("../partials/footer") %>
+
